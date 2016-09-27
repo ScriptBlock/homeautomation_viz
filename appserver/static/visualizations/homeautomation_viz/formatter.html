@@ -1,0 +1,88 @@
+<form class="splunk-formatter-section" section-label="Colors">
+	<div class="control-group">
+        <label class="control-label">Cold</label>
+        <div class="controls controls-fill">
+        	<splunk-color-picker name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.coldColor" value="#00CCFF"></splunk-color-picker>
+        	<splunk-text-input name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.coldTemp" value="65"></splunk-text-input>
+        </div>
+    </div>
+
+	<div class="control-group">
+        <label class="control-label">Normal</label>
+        <div class="controls controls-fill">
+        	<splunk-color-picker name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.normalColor" value="#FFFFFF"></splunk-color-picker>
+        	<splunk-text-input name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.normalTemp" value="75"></splunk-text-input>
+        </div>
+    </div>
+
+	<div class="control-group">
+        <label class="control-label">Warm</label>
+        <div class="controls controls-fill">
+        	<splunk-color-picker name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.warmColor" value="#ccff00"></splunk-color-picker>
+        	<splunk-text-input name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.warmTemp" value="85"></splunk-text-input>
+        </div>
+    </div>    
+
+	<div class="control-group">
+        <label class="control-label">Hot</label>
+        <div class="controls controls-fill">
+        	<splunk-color-picker name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.hotColor" value="#ff0000"></splunk-color-picker>
+        </div>
+    </div>
+
+</form>
+
+
+<form class="splunk-formatter-section" section-label="Elements">
+    <div class="control-group">
+        <label class="control-label">Show room temps</label>
+        <div class="controls controls-fill">
+            <splunk-radio-input name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.showTemps" value="true">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+            </splunk-radio-input>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Show doors</label>
+        <div class="controls controls-fill">
+            <splunk-radio-input name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.showDoors" value="true">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+            </splunk-radio-input>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Door Open Color</label>
+        <div class="controls controls-fill">
+            <splunk-color-picker name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.doorOpenColor" value="#ff6600"></splunk-color-picker>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Door Closed Color</label>
+        <div class="controls controls-fill">
+            <splunk-color-picker name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.doorClosedColor" value="#00FF00"></splunk-color-picker>
+        </div>        
+    </div>
+    <div class="control-group">
+        <label class="control-label">Show room lights</label>
+        <div class="controls controls-fill">
+            <splunk-radio-input name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.showLights" value="true">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+            </splunk-radio-input>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Light On Color</label>
+        <div class="controls controls-fill">
+            <splunk-color-picker name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.lightOnColor" value="#ffff00"></splunk-color-picker>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Light Off Color</label>
+        <div class="controls controls-fill">
+            <splunk-color-picker name="display.visualizations.custom.homeautomation_viz.homeautomation_viz.lightOffColor" value="#000000"></splunk-color-picker>
+        </div>                
+    </div>
+</form>
