@@ -14,3 +14,6 @@ display.visualizations.custom.homeautomation_viz.homeautomation_viz.showLights =
 display.visualizations.custom.homeautomation_viz.homeautomation_viz.lightOnColor = <string>
 display.visualizations.custom.homeautomation_viz.homeautomation_viz.lightOffColor = <string>
 
+display.visualizations.custom.homeautomation_viz.homeautomation_viz.showMotion = <boolean>
+display.visualizations.custom.homeautomation_viz.homeautomation_viz.motionColor = <string>
+display.visualizations.custom.homeautomation_viz.homeautomation_viz.noMotionColor = <string>

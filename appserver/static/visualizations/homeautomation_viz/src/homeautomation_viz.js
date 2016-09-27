@@ -46,20 +46,29 @@ define([
 
 
         _getConfigParams: function(config) {
-            this.coldColor = +this._getEscapedProperty('colorColor', config) || '#00CCFF';
-            this.coldTemp = +this._getEscapedProperty('coldTemp', config) || 65;
-            this.normalColor = +this._getEscapedProperty('normalColor', config) || '#FFFFFF';
-            this.normalTemp = +this._getEscapedProperty('normalTemp', config) || 75;
-            this.warmColor = +this._getEscapedProperty('warmColor', config) || '#CCFF00';
-            this.warmTemp = +this._getEscapedProperty('warmTemp', config) || 85;
-            this.hotColor = +this._getEscapedProperty('hotColor', config) || '#FF0000';
             this.showTemps = +this._getEscapedProperty('showTemps', config) || true;
             this.showDoors = +this._getEscapedProperty('showDoors', config) || true;
             this.showLights = +this._getEscapedProperty('showLights', config) || true;
+            this.showMotion = +this._getEscapedProperty('showMotion', config) || true;
+
+            this.coldTemp = +this._getEscapedProperty('coldTemp', config) || 65;
+            this.normalTemp = +this._getEscapedProperty('normalTemp', config) || 75;
+            this.warmTemp = +this._getEscapedProperty('warmTemp', config) || 85;
+
+            this.coldColor = +this._getEscapedProperty('colorColor', config) || '#00CCFF';
+            this.normalColor = +this._getEscapedProperty('normalColor', config) || '#FFFFFF';
+            this.warmColor = +this._getEscapedProperty('warmColor', config) || '#CCFF00';
+            this.hotColor = +this._getEscapedProperty('hotColor', config) || '#FF0000';
+
             this.doorOpenColor = +this._getEscapedProperty('doorOpenColor', config) || '#ff6600';
             this.doorClosedColor = +this._getEscapedProperty('doorClosedColor', config) || '#00FF00';
+
             this.lightOnColor = +this._getEscapedProperty('lightOnColor', config) || '#ffff00';
             this.lightOffColor = +this._getEscapedProperty('lightOffColor', config) || '#000000';
+
+            this.motionColor = +this._getEscapedProperty('motionColor', config) || '#ffff00';
+            this.noMotionColor = +this._getEscapedProperty('noMotionColor', config) || '#000000';
+
 
         },
 
@@ -82,6 +91,8 @@ define([
             var that = this;
             var myMap = this.map;
 
+            var noRoom = eval("[[0,0],[0,0]]");
+
             if(!this.hasGoodDom) {
                 var map = this.map = L.map(this.el, {crs: L.CRS.Simple, scrollWheelZoom: true});
                 L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.first_floor_image, MAP_DETAILS.first_floor_bounds).addTo(map);
@@ -103,6 +114,10 @@ define([
 
             console.log("before data filter");
 
+
+            var roomList = new Object();
+
+
             var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
             _.each(infoDevices, function(data) {
                 var fg = L.featureGroup();
@@ -113,13 +128,28 @@ define([
                 var switchState = data["switch"]; //smartThings field
                 var temperature = data["temperature"]; //smartThings field
                 var switchLevel = data["switchlevel"]; //smartThings field
+                var motion = data["motion"]; //smartThings field
 
                 var roomshape = data["roomshape"]; //lookup field
                 var roomcoords = eval(data["roomcoords"]);  //lookup field                             
-                var coords = eval(data["coords"]); //lookup field                                    
-                var shape = data["shape"]; //lookup field
+                var devicecoords = eval(data["coords"]); //lookup field                                    
+                var deviceshape = data["shape"]; //lookup field
                 var deviceRoom = data["deviceroom"]; //lookup field
-                //var deviceType = data["type"]; //lookup field - future use maybe
+                var deviceType = data["type"]; //lookup field 
+
+
+//NEW CODE
+
+                if(roomcoords !== noRoom) { //if there are legit room coordinates
+
+
+
+                }
+
+
+
+
+//END NEW CODE
 
 
                 console.log("main loop.. working with data");
