@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Logical Space Config</title>
+    <link rel="shortcut icon" href="{{SPLUNKWEB_URL_PREFIX}}/static/img/favicon.ico" />
+        <link rel="stylesheet" type="text/css" href="{{SPLUNKWEB_URL_PREFIX}}/static/css/build/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="{{SPLUNKWEB_URL_PREFIX}}/static/css/build/pages/dashboard-simple-bootstrap.min.css" />
+</head>
+<body class="simplexml preload locale-en">
+<!-- 
+BEGIN LAYOUT
+This section contains the layout for the dashboard. Splunk uses proprietary
+styles in <div> tags, similar to Bootstrap's grid system. 
+-->
+<a class="navSkip" href="#navSkip" tabindex="1">Screen reader users, click here to skip the navigation bar</a>
+<div class="header splunk-header">
+        <div id="placeholder-splunk-bar">
+            <a href="{{SPLUNKWEB_URL_PREFIX}}/app/launcher/home" class="brand" title="splunk &gt; listen to your data">splunk<strong>&gt;</strong></a>
+        </div>
+            <div id="placeholder-app-bar"></div>
+</div>
+<a id="navSkip"></a>
+
+
+<!-- HERES THE CHANGES -->
+<div class="dashboard-body container-fluid main-section-body" data-role"main">
+	<h3>Space Definition</h3>
+
+	<form id="formSpaceConfiguration">
+		<div class="fieldset">
+			<div class="input input-text" id="input1"><label>Space Name</label></div>
+			<div class="input input-text" id="input2"><label>Coordinates (Border Definition)</label></div>
+			<div class="input input-text" id="input3"><label>KeyID</label></div>
+			<div class="form-submit" id="search_btn"><button class="btn btn-primary submit">Submit</button></div>
+			<div><button id="deleteRecord">Delete Record</button></div>
+		<div>
+	</form>
+
+
+
+        <div id="row1" class="dashboard-row dashboard-row1">
+		<div id="panel1" class="dashboard-cell" style="width: 100%;">
+			<div class="dashboard-panel clearfix">
+                		<div class="panel-element-row">
+					<div id="element1" class="dashboard-element table" style="width: 100%">
+						<div class="panel-head"><h3>Space Listing</h3></div>
+						<div class="panel-body"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="row2" class="dashboard-row dashboard-row2">
+		<div id="panel2" class="dashboard-cell" style="width: 100%;">
+			<div class="dashboard-panel clearfix">
+				<div class="panel-element-row">
+					<div id="element2" class="dashboard-element viz" style="width: 100%">
+						<div class="panel-head"><h3>Space Preview</h3></div>
+						<div class="panel-body"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="footer"></div>
+
+<!-- 
+END LAYOUT
+-->
+
+<script src="{{SPLUNKWEB_URL_PREFIX}}/config?autoload=1"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/static/js/i18n.js"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/i18ncatalog?autoload=1"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/static/js/build/simplexml.min/config.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+require.config({
+    baseUrl: "{{SPLUNKWEB_URL_PREFIX}}/static/js",
+    waitSeconds: 0 // Disable require.js load timeout
+});
+
+//
+// LIBRARY REQUIREMENTS
+//
+// In the require function, we include the necessary libraries and modules for
+// the HTML dashboard. Then, we pass variable names for these libraries and
+// modules as function parameters, in order.
+// 
+// When you add libraries or modules, remember to retain this mapping order
+// between the library or module and its function parameter. You can do this by
+// adding to the end of these lists, as shown in the commented examples below.
+
+require([
+    "splunkjs/mvc",
+    "splunkjs/mvc/utils",
+    "splunkjs/mvc/tokenutils",
+    "underscore",
+    "jquery",
+    "splunkjs/mvc/simplexml",
+    "splunkjs/mvc/headerview",
+    "splunkjs/mvc/footerview",
+    "splunkjs/mvc/simplexml/dashboardview",
+    "splunkjs/mvc/simplexml/dashboard/panelref",
+    "splunkjs/mvc/simplexml/element/chart",
+    "splunkjs/mvc/simplexml/element/event",
+    "splunkjs/mvc/simplexml/element/html",
+    "splunkjs/mvc/simplexml/element/list",
+    "splunkjs/mvc/simplexml/element/map",
+    "splunkjs/mvc/simplexml/element/single",
+    "splunkjs/mvc/simplexml/element/table",
+    "splunkjs/mvc/simplexml/element/visualization",
+    "splunkjs/mvc/simpleform/formutils",
+    "splunkjs/mvc/simplexml/eventhandler",
+    "splunkjs/mvc/simplexml/searcheventhandler",
+    "splunkjs/mvc/simpleform/input/dropdown",
+    "splunkjs/mvc/simpleform/input/radiogroup",
+    "splunkjs/mvc/simpleform/input/linklist",
+    "splunkjs/mvc/simpleform/input/multiselect",
+    "splunkjs/mvc/simpleform/input/checkboxgroup",
+    "splunkjs/mvc/simpleform/input/text",
+    "splunkjs/mvc/simpleform/input/timerange",
+    "splunkjs/mvc/simpleform/input/submit",
+    "splunkjs/mvc/searchmanager",
+    "splunkjs/mvc/savedsearchmanager",
+    "splunkjs/mvc/postprocessmanager",
+    "splunkjs/mvc/simplexml/urltokenmodel"
+    // Add comma-separated libraries and modules manually here, for example:
+    // ..."splunkjs/mvc/simplexml/urltokenmodel",
+    // "splunkjs/mvc/tokenforwarder"
+    ],
+    function(
+        mvc,
+        utils,
+        TokenUtils,
+        _,
+        $,
+        DashboardController,
+        HeaderView,
+        FooterView,
+        Dashboard,
+        PanelRef,
+        ChartElement,
+        EventElement,
+        HtmlElement,
+        ListElement,
+        MapElement,
+        SingleElement,
+        TableElement,
+        VisualizationElement,
+        FormUtils,
+        EventHandler,
+        SearchEventHandler,
+        DropdownInput,
+        RadioGroupInput,
+        LinkListInput,
+        MultiSelectInput,
+        CheckboxGroupInput,
+        TextInput,
+        TimeRangeInput,
+        SubmitButton,
+        SearchManager,
+        SavedSearchManager,
+        PostProcessManager,
+        UrlTokenModel
+
+        // Add comma-separated parameter names here, for example: 
+        // ...UrlTokenModel, 
+        // TokenForwarder
+        ) {
+
+        var pageLoading = true;
+
+
+        // 
+        // TOKENS
+        //
+        
+        // Create token namespaces
+        var urlTokenModel = new UrlTokenModel();
+        mvc.Components.registerInstance('url', urlTokenModel);
+        var defaultTokenModel = mvc.Components.getInstance('default', {create: true});
+        var submittedTokenModel = mvc.Components.getInstance('submitted', {create: true});
+
+        urlTokenModel.on('url:navigate', function() {
+            defaultTokenModel.set(urlTokenModel.toJSON());
+            if (!_.isEmpty(urlTokenModel.toJSON()) && !_.all(urlTokenModel.toJSON(), _.isUndefined)) {
+                submitTokens();
+            } else {
+                submittedTokenModel.clear();
+            }
+        });
+
+        // Initialize tokens
+        defaultTokenModel.set(urlTokenModel.toJSON());
+
+        function submitTokens() {
+            // Copy the contents of the defaultTokenModel to the submittedTokenModel and urlTokenModel
+            FormUtils.submitForm({ replaceState: pageLoading });
+        }
+
+
+        function setToken(name, value) {
+            defaultTokenModel.set(name, value);
+            submittedTokenModel.set(name, value);
+        }
+
+        function unsetToken(name) {
+            defaultTokenModel.unset(name);
+            submittedTokenModel.unset(name);
+        }
+
+        
+        
+        //
+        // SEARCH MANAGERS
+        //
+
+        var search1 = new SearchManager({
+            "id": "search1",
+            "latest_time": "$latest$",
+            "earliest_time": "0",
+            "sample_ratio": null,
+            "search": " | inputlookup spaces_lookup | eval KeyID = _key | table spaceName, coordinates, KeyID",
+            "status_buckets": 0,
+            "cancelOnUnload": true,
+            "app": utils.getCurrentApp(),
+            "auto_cancel": 90,
+            "preview": true,
+            "runWhenTimeIsUndefined": false
+        }, {tokens: true});
+
+        var search2 = new SearchManager({
+            "id": "search2",
+            "latest_time": "$latest$",
+            "earliest_time": "0",
+            "sample_ratio": null,
+            "search": "TBD Space Preview",
+            "status_buckets": 0,
+            "cancelOnUnload": true,
+            "app": utils.getCurrentApp(),
+            "auto_cancel": 90,
+            "preview": true,
+            "runWhenTimeIsUndefined": false
+        }, {tokens: true, tokenNamespace: "submitted"});
+
+
+
+        //
+        // SPLUNK HEADER AND FOOTER
+        //
+
+        new HeaderView({
+            id: 'header',
+            section: 'dashboards',
+            el: $('.header'),
+            acceleratedAppNav: true,
+            useSessionStorageCache: true,
+            splunkbar: true,
+            appbar: true,
+            litebar: false,
+        }, {tokens: true}).render();
+
+        new FooterView({
+            id: 'footer',
+            el: $('.footer')
+        }, {tokens: true}).render();
+
+
+        //
+        // DASHBOARD EDITOR
+        //
+
+        new Dashboard({
+            id: 'dashboard',
+            el: $('.dashboard-body'),
+            showTitle: true,
+            editable: true
+        }, {tokens: true}).render();
+
+
+        //
+        // VIEWS: VISUALIZATION ELEMENTS
+        //
+
+        var element1 = new TableElement({
+            "id": "element1",
+            "drilldown": "cell",
+            "drilldownRedirect": false,
+            "rowNumbers": "undefined",
+            "wrap": "undefined",
+            "managerid": "search1",
+            "el": $('#element1')
+        }, {tokens: true}).render();
+
+        element1.on("click", function(e) {
+
+          //TBD - don't know how to make the form populate with the clicked value
+          console.log(e);
+          console.log("clicked value = " + e.data["row.KeyID"]);
+          //input3.value = e.data["click.value"];
+	  //console.log(input3);
+
+          //$('#input3').children().children()[0].value = e.data["click.value"];
+          $('#formSpaceConfiguration input[id^="input3"]').val(e.data["row.KeyID"]);
+          FormUtils.handleValueChange(input3);
+          setToken("KeyID", e.data["row.KeyID"]);
+
+          //input3.settings.set("value", "your mother");
+          //input3.render();
+          //input3.settings.set("value", e.data["click.value"]);
+        });
+
+        var element2 = new VisualizationElement({
+            "id": "element2",
+            "type": "homeautomation_viz.homeautomation_viz",
+            "resizable": true,
+            "managerid": "search2",
+            "el": $('#element2')
+        }, {tokens: true, tokenNamespace: "submitted"}).render();
+
+
+        //
+        // VIEWS: FORM INPUTS
+        //
+
+        var input1 = new TextInput({
+            "id": "input1",
+            "searchWhenChanged": false,
+            "value": "$form.spaceName$",
+            "el": $('#input1')
+        }, {tokens: true}).render();
+
+        input1.on("change", function(newValue) {
+            FormUtils.handleValueChange(input1);
+        });
+        
+        var input2 = new TextInput({
+            "id": "input2",
+            "value": "$form.coordinates$",
+            "el": $('#input2')
+        }, {tokens: true}).render();
+
+        input2.on("change", function(newValue) {
+            FormUtils.handleValueChange(input2);
+        });
+        
+
+	var input3 = new TextInput({
+	    "id": "input3",
+            "value": "$form.KeyID$",
+            "el": $('#input3')
+        }, {tokens: true}).render();
+
+        input3.on("change", function(newValue) {
+            FormUtils.handleValueChange(input3);
+        });
+
+	//
+	// CREATE SERVICE OBJECT
+	//
+	var service = mvc.createService({ owner: "nobody"});
+
+
+        $("#deleteRecord").click(function() {
+            var tokens = mvc.Components.get("default");
+            var form_keyid = tokens.get("KeyID");
+
+            service.del("storage/collections/data/spaces/" + encodeURIComponent(form_keyid))
+                 .done(function() {
+                     setToken("KeyID", undefined);
+                     $("#formSpaceConfiguration input[type=text]").val("");
+                     search1.startSearch();
+                 });
+            return false;
+        });
+
+        // 
+        // SUBMIT FORM DATA
+        //
+
+        var submit = new SubmitButton({
+            id: 'submit',
+            el: $('#search_btn')
+        }, {tokens: true}).render();
+
+        submit.on("submit", function() {
+            submitTokens();
+	    
+            var tokens = mvc.Components.get("default");
+            var spaceName = tokens.get("spaceName");
+            var coordinates = tokens.get("coordinates");
+            var KeyID = tokens.get("KeyID");
+
+            var record = {
+                "spaceName": spaceName,
+                "coordinates": coordinates
+            }
+            
+            var uri = "storage/collections/data/spaces/";
+            if(typeof KeyID != "undefined") {
+	        console.log("this appears to be a record update");
+         	uri += KeyID + "/";
+            } else {
+		console.log("this appears to be a new record");
+            }
+            console.log("posting to URI: " + uri);
+
+            service.request(
+		uri,
+                "POST",
+		null,
+		null,
+		JSON.stringify(record),
+		{"Content-Type": "application/json"},
+		null)
+                    .done(function() {
+                        search1.startSearch();
+                        $("#formSpaceConfiguration input[type=text]").val("");
+                        setToken("KeyID", undefined);
+                    });
+
+
+
+        });
+
+        // Initialize time tokens to default
+        if (!defaultTokenModel.has('earliest') && !defaultTokenModel.has('latest')) {
+            defaultTokenModel.set({ earliest: '0', latest: '' });
+        }
+
+        if (!_.isEmpty(urlTokenModel.toJSON())){
+            submitTokens();
+        }
+
+
+        //
+        // DASHBOARD READY
+        //
+
+        DashboardController.ready();
+        pageLoading = false;
+
+    }
+);
+// ]]>
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<form>
+  <label>Logical Space Config Base</label>
+  <fieldset submitButton="true">
+    <input type="text" token="spaceName" searchWhenChanged="false">
+      <label>Space Name</label>
+    </input>
+    <input type="text" token="coordinates">
+      <label>Coordinates (Border Definition)</label>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <title>Space Listing</title>
+        <search>
+          <query>TBD Space Listing</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="wrap">undefined</option>
+        <option name="rowNumbers">undefined</option>
+        <option name="drilldown">row</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <viz type="homeautomation_viz.homeautomation_viz">
+        <title>Space Preview</title>
+        <search>
+          <query>TBD Space Preview</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+      </viz>
+    </panel>
+  </row>
+</form>
