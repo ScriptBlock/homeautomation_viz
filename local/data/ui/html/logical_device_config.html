@@ -229,7 +229,7 @@ require([
             "auto_cancel": 90,
             "preview": true,
             "runWhenTimeIsUndefined": false
-        }, {tokens: true);
+        }, {tokens: true});
 
         var search2 = new SearchManager({
             "id": "search2",
@@ -243,7 +243,7 @@ require([
             "auto_cancel": 90,
             "preview": true,
             "runWhenTimeIsUndefined": false
-        }, {tokens: true);
+        }, {tokens: true});
 
         var search3 = new SearchManager({
             "id": "search3",
@@ -323,7 +323,7 @@ require([
             "el": $('#element1')
         }, {tokens: true}).render();
 
-        element1.on("click", function(e)) {
+        element1.on("click", function(e) {
             //set the form fields to the kv row data
 
             $('#formDeviceConfiguration input[id^="input1"]').val(e.data["row.deviceName"]);
@@ -347,9 +347,7 @@ require([
             $('#formDeviceConfiguration input[id^="input5"]').val(e.data["row.KeyID"]);
             FormUtils.handleValueChange(input5);
             setToken("KeyID", e.data["row.KeyID"]);
-
-
-        }
+        });
 
         var element2 = new VisualizationElement({
             "id": "element2",

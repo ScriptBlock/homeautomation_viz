@@ -95,8 +95,10 @@ define([
             var roomData = response.data;
             var roomFeatureGroup = L.featureGroup();
 
-
+            console.log("drawing rooms");
+            console.log(roomData);
             _.each(roomData, function(room) {
+
                 var roomopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#f0f0f0"};
                 var coords = eval(room["coordinates"]);
                 var coordSize = _.size(coords);
