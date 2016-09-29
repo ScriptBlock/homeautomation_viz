@@ -14,6 +14,10 @@ module.exports = {
     },
     externals: [
         'vizapi/SplunkVisualizationBase',
-        'vizapi/SplunkVisualizationUtils'
+        'vizapi/SplunkVisualizationUtils',
+        'splunkjs/mvc',
+        'splunkjs/mvc/utils',
+        'splunkjs/mvc/tokenutils',
+        'splunkjs/mvc/searchmanager'
     ]
 };

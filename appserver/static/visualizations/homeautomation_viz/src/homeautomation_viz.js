@@ -2,19 +2,27 @@
  * Visualization source
  */
 define([
+            'splunkjs/mvc',
+            'splunkjs/mvc/utils',
+            'splunkjs/mvc/tokenutils',
             'jquery',
             'underscore',
             'vizapi/SplunkVisualizationBase',
             'vizapi/SplunkVisualizationUtils',
-            'leaflet'
+            'leaflet',
+            'splunkjs/mvc/searchmanager',
             // Add required assets to this list
         ],
         function(
+            mvc,
+            utils,
+            TokenUtils,
             $,
             _,
             SplunkVisualizationBase,
             vizUtils,
-            L
+            L,
+            SearchManager
         ) {
   
 
@@ -26,6 +34,24 @@ define([
         first_floor_image: 'house-first-floor.png',
         total_bounds: [[0,0],[20,40]]
     }
+/*
+    var roomSearch = new SearchManager({
+        "id": "roomSearch1",
+        "latest_time": "now",
+        "earliest_time": "0",
+        "sample_ratio": null,
+        "search": " | inputlookup spaces_lookup | eval KeyID = _key | table spaceName, coordinates",
+        "status_buckets": 0,
+        "cancelOnUnload": true,
+        //"app": utils.getCurrentApp(),
+        "auto_cancel": 30,
+        "preview": false,
+        "runWhenTimeIsUndefined": "false"
+    });
+*/
+
+    var service = mvc.createService({ owner: "nobody"});
+    var layerGroup;
 
     // Extend from SplunkVisualizationBase
     return SplunkVisualizationBase.extend({
@@ -35,8 +61,6 @@ define([
             this.$el = $(this.el);
             $(this.el).addClass("leaflet_map");
             this.hasGoodDom = false;
-            //console.log("this.el");
-            //console.log(this.el);
         },
 
         _getEscapedProperty: function(name, config) {
@@ -80,6 +104,35 @@ define([
 
             return data;
         },
+
+        drawRooms: function(err, response) {
+            //console.log("Called drawrooms callback");
+
+            var roomData = response.data;
+            //console.log("room Data");
+            //console.log(roomData);
+            var roomFeatureGroup = L.featureGroup();
+
+
+            _.each(roomData, function(room) {
+                //console.log("Working with room: ");
+                //console.log(room);
+                var roomopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#f0f0f0"};
+                var coords = eval(room["coordinates"]);
+                var coordSize = _.size(coords);
+                var roomObj;
+                if(coordSize == 2) {
+                    roomObj = L.rectangle(coords, roomopts);
+                } else {
+                    roomObj = L.polygon(coords, roomopts);
+                }                
+                roomObj.addTo(roomFeatureGroup);
+            });
+            //console.log("this.layergroup");
+            //console.log(layerGroup);
+            layerGroup.addLayer(roomFeatureGroup);
+
+        },
   
         // Implement updateView to render a visualization.
         //  'data' will be the data object returned from formatData or from the search
@@ -94,6 +147,7 @@ define([
             var noRoom = eval("[[0,0],[0,0]]");
 
             if(!this.hasGoodDom) {
+                console.log("Running new DOM creation");
                 var map = this.map = L.map(this.el, {crs: L.CRS.Simple, scrollWheelZoom: true});
                 L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.first_floor_image, MAP_DETAILS.first_floor_bounds).addTo(map);
                 L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.basement_image, MAP_DETAILS.basement_bounds).addTo(map);
@@ -101,22 +155,24 @@ define([
                 map.fitBounds(MAP_DETAILS.total_bounds);
                 this.hasGoodDom = true;
                 this.map = map;
-                console.log("create this.map variable - nz");
-                this.layerGroup = new L.LayerGroup().addTo(map);
+                layerGroup = new L.LayerGroup().addTo(map);
                 map.setZoom(4);
-                console.log("trying a new line here");
             }
 
-            console.log("and another outputloing");
 
-            var layerGroup = this.layerGroup;
+
+            //var layerGroup = this.layerGroup;
             layerGroup.clearLayers();
 
-            console.log("before data filter");
+            //console.log("calling room KV store lookup");
+            service.get("storage/collections/data/spaces/",null,this.drawRooms);
 
 
-            var roomList = new Object();
+            _.each(dataRows, function(data) {
+                //nadda
+            }, this);
 
+/*
 
             var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
             _.each(infoDevices, function(data) {
@@ -147,10 +203,10 @@ define([
                 }
 
 
-
+*/
 
 //END NEW CODE
-
+/*
 
                 console.log("main loop.. working with data");
                 console.log("deviceroom: " + deviceRoom);
@@ -210,6 +266,7 @@ define([
                 fg.bindPopup(fgPopupText);
                 layerGroup.addLayer(fg);
             },this);
+*/
         },
 
         // Search data params

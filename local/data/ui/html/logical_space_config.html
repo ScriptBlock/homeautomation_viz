@@ -237,14 +237,14 @@ require([
             "latest_time": "$latest$",
             "earliest_time": "0",
             "sample_ratio": null,
-            "search": "TBD Space Preview",
+            "search": " | makeresults ", //makeresults just outputs a single row.  dummy data
             "status_buckets": 0,
             "cancelOnUnload": true,
             "app": utils.getCurrentApp(),
             "auto_cancel": 90,
             "preview": true,
             "runWhenTimeIsUndefined": false
-        }, {tokens: true, tokenNamespace: "submitted"});
+        }, {tokens: true});
 
 
 
@@ -348,10 +348,10 @@ require([
         });
         
 
-	var input3 = new TextInput({
-	    "id": "input3",
-            "value": "$form.KeyID$",
-            "el": $('#input3')
+        var input3 = new TextInput({
+           "id": "input3",
+           "value": "$form.KeyID$",
+           "el": $('#input3')
         }, {tokens: true}).render();
 
         input3.on("change", function(newValue) {
@@ -361,7 +361,7 @@ require([
 	//
 	// CREATE SERVICE OBJECT
 	//
-	var service = mvc.createService({ owner: "nobody"});
+        var service = mvc.createService({ owner: "nobody"});
 
 
         $("#deleteRecord").click(function() {
@@ -373,6 +373,7 @@ require([
                      setToken("KeyID", undefined);
                      $("#formSpaceConfiguration input[type=text]").val("");
                      search1.startSearch();
+                     search2.startSearch();
                  });
             return false;
         });
@@ -388,7 +389,7 @@ require([
 
         submit.on("submit", function() {
             submitTokens();
-	    
+
             var tokens = mvc.Components.get("default");
             var spaceName = tokens.get("spaceName");
             var coordinates = tokens.get("coordinates");
@@ -401,30 +402,31 @@ require([
             
             var uri = "storage/collections/data/spaces/";
             if(typeof KeyID != "undefined") {
-	        console.log("this appears to be a record update");
-         	uri += KeyID + "/";
-            } else {
-		console.log("this appears to be a new record");
-            }
-            console.log("posting to URI: " + uri);
+               console.log("this appears to be a record update");
+               uri += KeyID + "/";
+           } else {
+            console.log("this appears to be a new record");
+        }
+        console.log("posting to URI: " + uri);
 
-            service.request(
-		uri,
-                "POST",
-		null,
-		null,
-		JSON.stringify(record),
-		{"Content-Type": "application/json"},
-		null)
-                    .done(function() {
-                        search1.startSearch();
-                        $("#formSpaceConfiguration input[type=text]").val("");
-                        setToken("KeyID", undefined);
-                    });
-
-
-
+        service.request(
+            uri,
+            "POST",
+            null,
+            null,
+            JSON.stringify(record),
+            {"Content-Type": "application/json"},
+            null)
+                .done(function() {
+                search1.startSearch();
+                search2.startSearch();
+                $("#formSpaceConfiguration input[type=text]").val("");
+                setToken("KeyID", undefined);
         });
+
+
+
+    });
 
         // Initialize time tokens to default
         if (!defaultTokenModel.has('earliest') && !defaultTokenModel.has('latest')) {
