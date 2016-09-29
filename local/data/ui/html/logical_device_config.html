@@ -39,6 +39,9 @@ styles in <div> tags, similar to Bootstrap's grid system.
         <div class="input input-text" id="input4">
             <label>Coordinates</label>
         </div>
+        <div class="input input-text" id="input5">
+            <label>KeyID</label>
+        </div>
         <div class="form-submit" id="search_btn">
             <button class="btn btn-primary submit">Submit</button>
         </div>
@@ -401,6 +404,16 @@ require([
 
         input4.on("change", function(newValue) {
             FormUtils.handleValueChange(input4);
+        });
+        
+        var input5 = new TextInput({
+            "id": "input5",
+            "value": "$form.KeyID$",
+            "el": $('#input5')
+        }, {tokens: true}).render();
+
+        input5.on("change", function(newValue) {
+            FormUtils.handleValueChange(input5);
         });
         
 
