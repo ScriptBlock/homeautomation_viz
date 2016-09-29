@@ -9,9 +9,7 @@ define([
             'underscore',
             'vizapi/SplunkVisualizationBase',
             'vizapi/SplunkVisualizationUtils',
-            'leaflet',
-            'splunkjs/mvc/searchmanager',
-            // Add required assets to this list
+            'leaflet'
         ],
         function(
             mvc,
@@ -21,11 +19,13 @@ define([
             _,
             SplunkVisualizationBase,
             vizUtils,
-            L,
-            SearchManager
+            L
         ) {
   
 
+
+    //TODO this can be deprecated
+    //maybe add some CRUD overlay in the future
     var MAP_DETAILS = {
         url: '/en-US/static/@f2c836328108:0/app/homeautomation_viz/images/',
         basement_image: 'house-basement.png',
@@ -34,21 +34,7 @@ define([
         first_floor_image: 'house-first-floor.png',
         total_bounds: [[0,0],[20,40]]
     }
-/*
-    var roomSearch = new SearchManager({
-        "id": "roomSearch1",
-        "latest_time": "now",
-        "earliest_time": "0",
-        "sample_ratio": null,
-        "search": " | inputlookup spaces_lookup | eval KeyID = _key | table spaceName, coordinates",
-        "status_buckets": 0,
-        "cancelOnUnload": true,
-        //"app": utils.getCurrentApp(),
-        "auto_cancel": 30,
-        "preview": false,
-        "runWhenTimeIsUndefined": "false"
-    });
-*/
+
 
     var service = mvc.createService({ owner: "nobody"});
     var layerGroup;
@@ -106,17 +92,11 @@ define([
         },
 
         drawRooms: function(err, response) {
-            //console.log("Called drawrooms callback");
-
             var roomData = response.data;
-            //console.log("room Data");
-            //console.log(roomData);
             var roomFeatureGroup = L.featureGroup();
 
 
             _.each(roomData, function(room) {
-                //console.log("Working with room: ");
-                //console.log(room);
                 var roomopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#f0f0f0"};
                 var coords = eval(room["coordinates"]);
                 var coordSize = _.size(coords);
@@ -128,8 +108,6 @@ define([
                 }                
                 roomObj.addTo(roomFeatureGroup);
             });
-            //console.log("this.layergroup");
-            //console.log(layerGroup);
             layerGroup.addLayer(roomFeatureGroup);
 
         },
@@ -149,6 +127,8 @@ define([
             if(!this.hasGoodDom) {
                 console.log("Running new DOM creation");
                 var map = this.map = L.map(this.el, {crs: L.CRS.Simple, scrollWheelZoom: true});
+
+                //TODO these can be deprecated in lieu of a big square grid maybe.
                 L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.first_floor_image, MAP_DETAILS.first_floor_bounds).addTo(map);
                 L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.basement_image, MAP_DETAILS.basement_bounds).addTo(map);
                
@@ -161,13 +141,17 @@ define([
 
 
 
-            //var layerGroup = this.layerGroup;
             layerGroup.clearLayers();
 
-            //console.log("calling room KV store lookup");
+
+            //TODO  - include/exclude these drawings based on CRUD process.  Maybe don't want to see rooms if devices are being edited and vice versa
             service.get("storage/collections/data/spaces/",null,this.drawRooms);
 
+            //TODO  - see above. same shit.  CRUD for the drawing of devices will be room/position/maybe capability & type.  
+            //will be useful to save the devices & rooms to a persistent variable so that we can reference during real search/data enum below
+            //service.get("storage/collections/data/devices/", null, this.drawDevices);
 
+            //TODO  - data enumeration will really just have the device name and the latest stats.  structures from above will dictate position, etc
             _.each(dataRows, function(data) {
                 //nadda
             }, this);
@@ -193,20 +177,6 @@ define([
                 var deviceRoom = data["deviceroom"]; //lookup field
                 var deviceType = data["type"]; //lookup field 
 
-
-//NEW CODE
-
-                if(roomcoords !== noRoom) { //if there are legit room coordinates
-
-
-
-                }
-
-
-*/
-
-//END NEW CODE
-/*
 
                 console.log("main loop.. working with data");
                 console.log("deviceroom: " + deviceRoom);
