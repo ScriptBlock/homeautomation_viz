@@ -38,6 +38,10 @@ define([
 
     var service = mvc.createService({ owner: "nobody"});
     var layerGroup;
+    var spaceData;
+    var deviceData;
+    var map;
+    var hasGoodDom = false;
 
     // Extend from SplunkVisualizationBase
     return SplunkVisualizationBase.extend({
@@ -46,7 +50,17 @@ define([
             SplunkVisualizationBase.prototype.initialize.apply(this, arguments);
             this.$el = $(this.el);
             $(this.el).addClass("leaflet_map");
-            this.hasGoodDom = false;
+            hasGoodDom = false;
+
+            console.log("homeautomation_viz initialize running");
+            console.log("building space and device data in initialize");
+
+            //these are built during init assuming that they already exist and are static when in use by the general viz.
+            //the data update method will look for the CRUD marker.  if the CRUD marker is found, these variables
+            //will be rebuilt during every data refresh instead of being static like is done here.
+            service.get("storage/collections/data/spaces/",null,this.storeSpaces);
+            service.get("storage/collections/data/devices/",null,this.storeDevices);
+
         },
 
         _getEscapedProperty: function(name, config) {
@@ -91,28 +105,39 @@ define([
             return data;
         },
 
-        drawRooms: function(err, response) {
-            var roomData = response.data;
-            var roomFeatureGroup = L.featureGroup();
+        storeSpaces: function(err, response) {
+            spaceData = response.data;
+        },
 
-            console.log("drawing rooms");
-            console.log(roomData);
-            _.each(roomData, function(room) {
+        storeDevices: function(err, response) {
+            deviceData = response.data;
+        },
 
-                var roomopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#f0f0f0"};
-                var coords = eval(room["coordinates"]);
+
+        drawSpacesCRUD: function(err, response) {
+            var spaceDataCRUD = response.data;
+            spaceData = spaceDataCRUD;
+            var spaceFeatureGroup = L.featureGroup();
+
+            console.log("drawing spaces");
+            console.log(spacesData);
+            _.each(spacesData, function(space) {
+
+                var spaceopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#f0f0f0"};
+                var coords = eval(space["coordinates"]);
                 var coordSize = _.size(coords);
-                var roomObj;
+                var spaceObj;
                 if(coordSize == 2) {
-                    roomObj = L.rectangle(coords, roomopts);
+                    spaceObj = L.rectangle(coords, spaceopts);
                 } else {
-                    roomObj = L.polygon(coords, roomopts);
+                    spaceObj = L.polygon(coords, spaceopts);
                 }                
-                roomObj.addTo(roomFeatureGroup);
+                spaceObj.addTo(spaceFeatureGroup);
             });
-            layerGroup.addLayer(roomFeatureGroup);
+            layerGroup.addLayer(spaceFeatureGroup);
 
         },
+        
   
         // Implement updateView to render a visualization.
         //  'data' will be the data object returned from formatData or from the search
@@ -120,41 +145,64 @@ define([
         updateView: function(data, config) {
             //var dataRows = data.rows; //this is used for ROW_MAJOR_OUTPUT_MODE
             var dataRows = data.results; //this is used for RAW_OUTPUT_MODE
-            //        
+            
             var that = this;
-            var myMap = this.map;
-
             var noRoom = eval("[[0,0],[0,0]]");
 
-            if(!this.hasGoodDom) {
+            if(!hasGoodDom) {
                 console.log("Running new DOM creation");
-                var map = this.map = L.map(this.el, {crs: L.CRS.Simple, scrollWheelZoom: true});
+                map = L.map(this.el, {crs: L.CRS.Simple, scrollWheelZoom: true});
 
                 //TODO these can be deprecated in lieu of a big square grid maybe.
                 L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.first_floor_image, MAP_DETAILS.first_floor_bounds).addTo(map);
                 L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.basement_image, MAP_DETAILS.basement_bounds).addTo(map);
                
-                map.fitBounds(MAP_DETAILS.total_bounds);
-                this.hasGoodDom = true;
-                this.map = map;
+                //Changing to fitWorld
+                //map.fitBounds(MAP_DETAILS.total_bounds);
+                map.fitWorld();
+
+                hasGoodDom = true;
+                
                 layerGroup = new L.LayerGroup().addTo(map);
-                map.setZoom(4);
+                
+                //Removing, hopefully map.fitWorld takes care of this
+                //map.setZoom(4);
             }
 
+            console.log("homeautomation_viz updateView running. ");
+            
+            
 
 
             layerGroup.clearLayers();
 
 
-            //TODO  - include/exclude these drawings based on CRUD process.  Maybe don't want to see rooms if devices are being edited and vice versa
-            service.get("storage/collections/data/spaces/",null,this.drawRooms);
+            var crudMode = _.find(dataRows, function(data) {
+                return data["mode"];
+            });
+            if(crudMode == "deviceCRUD") {
+                console.log("found CRUD mode = " + crudMode);
+                service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
+                service.get("storage/collections/data/devices/",null,this.drawDevicesCRUD);
+                //draw rooms and devices
+            } else if(crudMode = "spaceCRUD") {
+                console.log("found CRUD mode = " + crudMode);
+                service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
+                //draw just rooms
+            }
+
+
+
+            //TODO  - include/exclude room/device drawings based on CRUD process.  Maybe don't want to see rooms if devices are being edited and vice versa
+            
 
             //TODO  - see above. same shit.  CRUD for the drawing of devices will be room/position/maybe capability & type.  
             //will be useful to save the devices & rooms to a persistent variable so that we can reference during real search/data enum below
             //service.get("storage/collections/data/devices/", null, this.drawDevices);
 
             //TODO  - data enumeration will really just have the device name and the latest stats.  structures from above will dictate position, etc
-            _.each(dataRows, function(data) {
+            var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
+            _.each(infoDevices, function(data) {
                 //nadda
             }, this);
 

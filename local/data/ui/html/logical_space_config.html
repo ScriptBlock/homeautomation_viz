@@ -237,7 +237,7 @@ require([
             "latest_time": "$latest$",
             "earliest_time": "0",
             "sample_ratio": null,
-            "search": " | makeresults ", //makeresults just outputs a single row.  dummy data
+            "search": ' | makeresults | eval mode="spaceCRUD" ', //makeresults just outputs a single row.  dummy data
             "status_buckets": 0,
             "cancelOnUnload": true,
             "app": utils.getCurrentApp(),

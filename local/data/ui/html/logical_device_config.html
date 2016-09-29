@@ -234,7 +234,7 @@ require([
         var search2 = new SearchManager({
             "id": "search2",
             "latest_time": "$latest$",
-            "search": "| makeresults",
+            "search": '| makeresults | eval mode="deviceCRUD"',
             "earliest_time": "0",
             "sample_ratio": null,
             "cancelOnUnload": true,
