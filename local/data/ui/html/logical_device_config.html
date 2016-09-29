@@ -23,40 +23,29 @@ styles in <div> tags, similar to Bootstrap's grid system.
 </div>
 <a id="navSkip"></a>
 <div class="dashboard-body container-fluid main-section-body" data-role="main">
-    <div class="dashboard-header clearfix">
-        <h2>Logical Device Config</h2>
-    </div>
-    <div class="fieldset">
-        <div class="input input-dropdown" id="input1">
-            <label>Device Name</label>
+    <h3>Logical Device Config</h3>
+
+    <form id="formDeviceConfiguration">
+        <div class="fieldset">
+            <div class="input input-dropdown" id="input1"><label>Device Name</label></div>
+            <div class="input input-dropdown" id="input2"><label>Space Assignment</label></div>
+            <br/>
+            <div class="input input-dropdown" id="input3"><label>DeviceShape</label></div>
+            <div class="input input-text" id="input4"><label>Coordinates</label></div>
+            <br/>
+            <div class="input input-text" id="input5"><label>KeyID</label></div>
+            <div class="form-submit" id="search_btn"><button class="btn btn-primary submit">Submit</button></div>
+            <div><button id="deleteRecord">Delete Record</button></div>
         </div>
-        <div class="input input-dropdown" id="input2">
-            <label>Space Assignment</label>
-        </div>
-        <div class="input input-dropdown" id="input3">
-            <label>DeviceShape</label>
-        </div>
-        <div class="input input-text" id="input4">
-            <label>Coordinates</label>
-        </div>
-        <div class="input input-text" id="input5">
-            <label>KeyID</label>
-        </div>
-        <div class="form-submit" id="search_btn">
-            <button class="btn btn-primary submit">Submit</button>
-        </div>
-    </div>
+    </form>
 
 
     <div id="row1" class="dashboard-row dashboard-row1">
         <div id="panel1" class="dashboard-cell" style="width: 100%;">
-            <div class="dashboard-panel clearfix">
-                
+            <div class="dashboard-panel ">                
                 <div class="panel-element-row">
                     <div id="element1" class="dashboard-element table" style="width: 100%">
-                        <div class="panel-head">
-                            <h3>Device Listing</h3>
-                        </div>
+                        <div class="panel-head"><h3>Device Listing</h3></div>
                         <div class="panel-body"></div>
                     </div>
                 </div>
@@ -65,13 +54,10 @@ styles in <div> tags, similar to Bootstrap's grid system.
     </div>
     <div id="row2" class="dashboard-row dashboard-row2">
         <div id="panel2" class="dashboard-cell" style="width: 100%;">
-            <div class="dashboard-panel clearfix">
-                
+            <div class="dashboard-panel">                
                 <div class="panel-element-row">
                     <div id="element2" class="dashboard-element viz" style="width: 100%">
-                        <div class="panel-head">
-                            <h3>Device Listing</h3>
-                        </div>
+                        <div class="panel-head"><h3>Device Listing</h3></div>
                         <div class="panel-body"></div>
                     </div>
                 </div>
@@ -243,7 +229,7 @@ require([
             "auto_cancel": 90,
             "preview": true,
             "runWhenTimeIsUndefined": false
-        }, {tokens: true, tokenNamespace: "submitted"});
+        }, {tokens: true);
 
         var search2 = new SearchManager({
             "id": "search2",
@@ -257,12 +243,13 @@ require([
             "auto_cancel": 90,
             "preview": true,
             "runWhenTimeIsUndefined": false
-        }, {tokens: true, tokenNamespace: "submitted"});
+        }, {tokens: true);
 
         var search3 = new SearchManager({
             "id": "search3",
             "latest_time": "now",
-            "search": "index=homeautomation deviceName=* | dedup deviceName | table deviceName",
+            //TODO remove elements that have been added to the KV store
+            "search": "index=homeautomation deviceName=* | dedup deviceName | table deviceName", 
             "earliest_time": "-30d@d",
             "sample_ratio": null,
             "cancelOnUnload": true,
@@ -328,12 +315,41 @@ require([
 
         var element1 = new TableElement({
             "id": "element1",
-            "drilldown": "row",
+            "drilldown": "cell",
+            "drilldownRedirect": false,
             "rowNumbers": "undefined",
             "wrap": "undefined",
             "managerid": "search1",
             "el": $('#element1')
-        }, {tokens: true, tokenNamespace: "submitted"}).render();
+        }, {tokens: true}).render();
+
+        element1.on("click", function(e)) {
+            //set the form fields to the kv row data
+
+            $('#formDeviceConfiguration input[id^="input1"]').val(e.data["row.deviceName"]);
+            FormUtils.handleValueChange(input1);
+            setToken("deviceName", e.data["row.deviceName"]);
+
+            $('#formDeviceConfiguration input[id^="input2"]').val(e.data["row.spaceAssignment"]);
+            FormUtils.handleValueChange(input2);
+            setToken("spaceAssignment", e.data["row.spaceAssignment"]);
+
+
+            $('#formDeviceConfiguration input[id^="input3"]').val(e.data["row.deviceShape"]);
+            FormUtils.handleValueChange(input3);
+            setToken("deviceShape", e.data["row.deviceShape"]);
+
+            $('#formDeviceConfiguration input[id^="input4"]').val(e.data["row.coordinates"]);
+            FormUtils.handleValueChange(input4);
+            setToken("coordinates", e.data["row.coordinates"]);
+
+
+            $('#formDeviceConfiguration input[id^="input5"]').val(e.data["row.KeyID"]);
+            FormUtils.handleValueChange(input5);
+            setToken("KeyID", e.data["row.KeyID"]);
+
+
+        }
 
         var element2 = new VisualizationElement({
             "id": "element2",
@@ -417,6 +433,29 @@ require([
         });
         
 
+        //
+        // CREATE SERVICE OBJECT
+        //
+        var service = mvc.createService({ owner: "nobody"});
+
+        //
+        // DELETE FUNCTION
+        //
+        $("#deleteRecord").click(function() {
+            var tokens = mvc.Components.get("default");
+            var form_keyid = tokens.get("KeyID");
+
+            service.del("storage/collections/data/devices/" + encodeURIComponent(form_keyid))
+                 .done(function() {
+                     setToken("KeyID", undefined);
+                     $("#formDeviceConfiguration input[type=text]").val("");
+                     search1.startSearch();
+                     search2.startSearch();
+                 });
+            return false;
+        });
+
+
         // 
         // SUBMIT FORM DATA
         //
@@ -428,6 +467,40 @@ require([
 
         submit.on("submit", function() {
             submitTokens();
+
+            var tokens = mvc.Components.get("default");
+            var deviceName = tokens.get("deviceName");
+            var spaceAssignment = tokens.get("spaceAssignment");
+            var deviceShape = tokens.get("deviceShape");
+            var coordinates = tokens.get("coordinates");
+            var KeyID = tokens.get("KeyID");
+
+            var record = {
+                "deviceName": deviceName,
+                "spaceAssignment": spaceAssignment,
+                "deviceShape": deviceShape,
+                "coordinates": coordinates
+            }
+            var uri = "storage/collections/data/devices/";
+            if(typeof KeyID != "undefined") {
+                uri += KeyID + "/";
+            }
+
+            service.request(
+                uri,
+                "POST",
+                null,
+                null,
+                JSON.stringify(record),
+                {"Content-Type": "application/json"},
+                null)
+                    .done(function() {
+                        search1.startSearch();
+                        search2.startSearch();
+                        $("#formDeviceConfiguration input[type=text]").val("");
+                        setToken("KeyID", undefined);
+                    });
+
         });
 
         // Initialize time tokens to default

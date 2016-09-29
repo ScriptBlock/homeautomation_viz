@@ -40,9 +40,9 @@ styles in <div> tags, similar to Bootstrap's grid system.
 
 
 
-        <div id="row1" class="dashboard-row dashboard-row1">
+    <div id="row1" class="dashboard-row dashboard-row1">
 		<div id="panel1" class="dashboard-cell" style="width: 100%;">
-			<div class="dashboard-panel clearfix">
+			<div class="dashboard-panel">
                 		<div class="panel-element-row">
 					<div id="element1" class="dashboard-element table" style="width: 100%">
 						<div class="panel-head"><h3>Space Listing</h3></div>
@@ -54,7 +54,7 @@ styles in <div> tags, similar to Bootstrap's grid system.
 	</div>
 	<div id="row2" class="dashboard-row dashboard-row2">
 		<div id="panel2" class="dashboard-cell" style="width: 100%;">
-			<div class="dashboard-panel clearfix">
+			<div class="dashboard-panel">
 				<div class="panel-element-row">
 					<div id="element2" class="dashboard-element viz" style="width: 100%">
 						<div class="panel-head"><h3>Space Preview</h3></div>
@@ -297,20 +297,20 @@ require([
 
         element1.on("click", function(e) {
 
-          //TBD - don't know how to make the form populate with the clicked value
-          console.log(e);
-          console.log("clicked value = " + e.data["row.KeyID"]);
-          //input3.value = e.data["click.value"];
-	  //console.log(input3);
+          $('#formSpaceConfiguration input[id^="input1"]').val(e.data["row.spaceName"]);
+          FormUtils.handleValueChange(input1);
+          setToken("spaceName", e.data["row.spaceName"]);
 
-          //$('#input3').children().children()[0].value = e.data["click.value"];
+
+          $('#formSpaceConfiguration input[id^="input2"]').val(e.data["row.coordinates"]);
+          FormUtils.handleValueChange(input2);
+          setToken("coordinates", e.data["row.coordinates"]);
+
+
           $('#formSpaceConfiguration input[id^="input3"]').val(e.data["row.KeyID"]);
           FormUtils.handleValueChange(input3);
           setToken("KeyID", e.data["row.KeyID"]);
 
-          //input3.settings.set("value", "your mother");
-          //input3.render();
-          //input3.settings.set("value", e.data["click.value"]);
         });
 
         var element2 = new VisualizationElement({
@@ -358,12 +358,14 @@ require([
             FormUtils.handleValueChange(input3);
         });
 
-	//
-	// CREATE SERVICE OBJECT
-	//
+    	//
+    	// CREATE SERVICE OBJECT
+    	//
         var service = mvc.createService({ owner: "nobody"});
 
-
+        //
+        // DELETE FUNCTION
+        //
         $("#deleteRecord").click(function() {
             var tokens = mvc.Components.get("default");
             var form_keyid = tokens.get("KeyID");
@@ -404,29 +406,23 @@ require([
             if(typeof KeyID != "undefined") {
                console.log("this appears to be a record update");
                uri += KeyID + "/";
-           } else {
-            console.log("this appears to be a new record");
-        }
-        console.log("posting to URI: " + uri);
-
-        service.request(
-            uri,
-            "POST",
-            null,
-            null,
-            JSON.stringify(record),
-            {"Content-Type": "application/json"},
-            null)
-                .done(function() {
-                search1.startSearch();
-                search2.startSearch();
-                $("#formSpaceConfiguration input[type=text]").val("");
-                setToken("KeyID", undefined);
+            } 
+            
+            service.request(
+                uri,
+                "POST",
+                null,
+                null,
+                JSON.stringify(record),
+                {"Content-Type": "application/json"},
+                null)
+                   .done(function() {
+                        search1.startSearch();
+                        search2.startSearch();
+                        $("#formSpaceConfiguration input[type=text]").val("");
+                        setToken("KeyID", undefined);
+                    });
         });
-
-
-
-    });
 
         // Initialize time tokens to default
         if (!defaultTokenModel.has('earliest') && !defaultTokenModel.has('latest')) {
