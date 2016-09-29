@@ -39,6 +39,9 @@ styles in <div> tags, similar to Bootstrap's grid system.
         <div class="input input-text" id="input4">
             <label>Coordinates</label>
         </div>
+        <div class="form-submit" id="search_btn">
+            <button class="btn btn-primary submit">Submit</button>
+        </div>
     </div>
 
 
@@ -345,11 +348,10 @@ require([
         var input1 = new DropdownInput({
             "id": "input1",
             "choices": [],
-            "showClearButton": true,
             "selectFirstChoice": false,
             "labelField": "deviceName",
-            "searchWhenChanged": true,
             "valueField": "deviceName",
+            "showClearButton": true,
             "value": "$form.deviceName$",
             "managerid": "search3",
             "el": $('#input1')
@@ -362,11 +364,10 @@ require([
         var input2 = new DropdownInput({
             "id": "input2",
             "choices": [],
-            "showClearButton": true,
             "selectFirstChoice": false,
             "labelField": "spaceName",
-            "searchWhenChanged": true,
             "valueField": "spaceName",
+            "showClearButton": true,
             "value": "$form.spaceAssignment$",
             "managerid": "search4",
             "el": $('#input2')
@@ -383,7 +384,6 @@ require([
                 {"value": "Polygon", "label": "Polygon"}
             ],
             "selectFirstChoice": false,
-            "searchWhenChanged": true,
             "showClearButton": true,
             "value": "$form.deviceShape$",
             "el": $('#input3')
@@ -395,7 +395,6 @@ require([
         
         var input4 = new TextInput({
             "id": "input4",
-            "searchWhenChanged": true,
             "value": "$form.coordinates$",
             "el": $('#input4')
         }, {tokens: true}).render();
@@ -404,10 +403,18 @@ require([
             FormUtils.handleValueChange(input4);
         });
         
-        DashboardController.onReady(function() {
-            if (!submittedTokenModel.has('earliest') && !submittedTokenModel.has('latest')) {
-                submittedTokenModel.set({ earliest: '0', latest: '' });
-            }
+
+        // 
+        // SUBMIT FORM DATA
+        //
+
+        var submit = new SubmitButton({
+            id: 'submit',
+            el: $('#search_btn')
+        }, {tokens: true}).render();
+
+        submit.on("submit", function() {
+            submitTokens();
         });
 
         // Initialize time tokens to default
