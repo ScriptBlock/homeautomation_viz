@@ -17,7 +17,6 @@ module.exports = {
         'vizapi/SplunkVisualizationUtils',
         'splunkjs/mvc',
         'splunkjs/mvc/utils',
-        'splunkjs/mvc/tokenutils',
-        'splunkjs/mvc/searchmanager'
+        'splunkjs/mvc/tokenutils'
     ]
 };

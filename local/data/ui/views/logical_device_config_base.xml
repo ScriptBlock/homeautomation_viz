@@ -1,0 +1,58 @@
+<form>
+  <label>Logical Device Config Base</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="deviceName">
+      <label>Device Name</label>
+      <search>
+        <query>index=homeautomation deviceName=* | dedup deviceName | table deviceName</query>
+        <earliest>-30d@d</earliest>
+        <latest>now</latest>
+      </search>
+      <fieldForLabel>deviceName</fieldForLabel>
+      <fieldForValue>deviceName</fieldForValue>
+    </input>
+    <input type="dropdown" token="spaceAssignment">
+      <label>Space Assignment</label>
+      <search>
+        <query>| inputlookup spaces_lookup | table spaceName</query>
+      </search>
+      <fieldForLabel>spaceName</fieldForLabel>
+      <fieldForValue>spaceName</fieldForValue>
+    </input>
+    <input type="dropdown" token="deviceShape">
+      <label>DeviceShape</label>
+      <choice value="Circle">Circle</choice>
+      <choice value="Polygon">Polygon</choice>
+    </input>
+    <input type="text" token="coordinates">
+      <label>Coordinates</label>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <title>Device Listing</title>
+        <search>
+          <query>| inputlookup devices_lookup | eval KeyID = _key | table deviceName, spaceAssignment, deviceShape, coordinates, KeyID</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="wrap">undefined</option>
+        <option name="rowNumbers">undefined</option>
+        <option name="drilldown">row</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <viz type="homeautomation_viz.homeautomation_viz">
+        <title>Device Listing</title>
+        <search>
+          <query>| makeresults</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+      </viz>
+    </panel>
+  </row>
+</form>
