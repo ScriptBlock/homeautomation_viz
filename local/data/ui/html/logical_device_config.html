@@ -30,7 +30,7 @@ styles in <div> tags, similar to Bootstrap's grid system.
             <div class="input input-dropdown" id="input1"><label>Device Name</label></div>
             <div class="input input-dropdown" id="input2"><label>Space Assignment</label></div>
             <br/>
-            <div class="input input-dropdown" id="input3"><label>DeviceShape</label></div>
+            <div class="input input-dropdown" id="input6"><label>Device Type</label></div>
             <div class="input input-text" id="input4"><label>Coordinates</label></div>
             <br/>
             <div class="input input-text" id="input5"><label>KeyID</label></div>
@@ -220,7 +220,7 @@ require([
         var search1 = new SearchManager({
             "id": "search1",
             "latest_time": "$latest$",
-            "search": "| inputlookup devices_lookup | eval KeyID = _key | table deviceName, spaceAssignment, deviceShape, coordinates, KeyID",
+            "search": "| inputlookup devices_lookup | eval KeyID = _key | table deviceName, spaceAssignment, coordinates, deviceType, KeyID",
             "earliest_time": "0",
             "sample_ratio": null,
             "cancelOnUnload": true,
@@ -241,7 +241,7 @@ require([
             "status_buckets": 0,
             "app": utils.getCurrentApp(),
             "auto_cancel": 90,
-            "preview": true,
+            "preview": false,
             "runWhenTimeIsUndefined": false
         }, {tokens: true});
 
@@ -250,7 +250,7 @@ require([
             "latest_time": "now",
             //TODO remove elements that have been added to the KV store
             "search": "index=homeautomation deviceName=* | dedup deviceName | table deviceName", 
-            "earliest_time": "-30d@d",
+            "earliest_time": "-7d@d",
             "sample_ratio": null,
             "cancelOnUnload": true,
             "status_buckets": 0,
@@ -270,7 +270,7 @@ require([
             "status_buckets": 0,
             "app": utils.getCurrentApp(),
             "auto_cancel": 90,
-            "preview": true,
+            "preview": false,
             "runWhenTimeIsUndefined": false
         }, {tokens: true});
 
@@ -326,27 +326,26 @@ require([
         element1.on("click", function(e) {
             //set the form fields to the kv row data
 
-            $('#formDeviceConfiguration input[id^="input1"]').val(e.data["row.deviceName"]);
-            FormUtils.handleValueChange(input1);
+            //$('#formDeviceConfiguration input[id^="input1"]').val(e.data["row.deviceName"]);
+            //FormUtils.handleValueChange(input1);
             setToken("deviceName", e.data["row.deviceName"]);
 
-            $('#formDeviceConfiguration input[id^="input2"]').val(e.data["row.spaceAssignment"]);
-            FormUtils.handleValueChange(input2);
+            //$('#formDeviceConfiguration input[id^="input2"]').val(e.data["row.spaceAssignment"]);
+            //FormUtils.handleValueChange(input2);
             setToken("spaceAssignment", e.data["row.spaceAssignment"]);
 
-
-            $('#formDeviceConfiguration input[id^="input3"]').val(e.data["row.deviceShape"]);
-            FormUtils.handleValueChange(input3);
-            setToken("deviceShape", e.data["row.deviceShape"]);
-
-            $('#formDeviceConfiguration input[id^="input4"]').val(e.data["row.coordinates"]);
-            FormUtils.handleValueChange(input4);
+            //$('#formDeviceConfiguration input[id^="input4"]').val(e.data["row.coordinates"]);
+            //FormUtils.handleValueChange(input4);
             setToken("coordinates", e.data["row.coordinates"]);
 
 
-            $('#formDeviceConfiguration input[id^="input5"]').val(e.data["row.KeyID"]);
-            FormUtils.handleValueChange(input5);
+            //$('#formDeviceConfiguration input[id^="input5"]').val(e.data["row.KeyID"]);
+            //FormUtils.handleValueChange(input5);
             setToken("KeyID", e.data["row.KeyID"]);
+
+            //$('#formDeviceConfiguration input[id^="input6"]').val(e.data["row.deviceType"]);
+            //FormUtils.handleValueChange(input6);
+            setToken("deviceType", e.data["row.deviceType"]);
         });
 
         var element2 = new VisualizationElement({
@@ -394,22 +393,8 @@ require([
             FormUtils.handleValueChange(input2);
         });
         
-        var input3 = new DropdownInput({
-            "id": "input3",
-            "choices": [
-                {"value": "Circle", "label": "Circle"},
-                {"value": "Polygon", "label": "Polygon"}
-            ],
-            "selectFirstChoice": false,
-            "showClearButton": true,
-            "value": "$form.deviceShape$",
-            "el": $('#input3')
-        }, {tokens: true}).render();
 
-        input3.on("change", function(newValue) {
-            FormUtils.handleValueChange(input3);
-        });
-        
+       
         var input4 = new TextInput({
             "id": "input4",
             "value": "$form.coordinates$",
@@ -430,6 +415,23 @@ require([
             FormUtils.handleValueChange(input5);
         });
         
+        var input6 = new DropdownInput({
+            "id": "input6",
+            "choices": [
+                {"value": "Light", "label": "Light"},
+                {"value": "Contact", "label": "Contact"},
+                {"value": "Motion", "label": "Motion"}
+            ],
+            "selectFirstChoice": false,
+            "showClearButton": true,
+            "value": "$form.deviceType$",
+            "el": $('#input6')
+
+        }, {tokens: true}).render();
+
+        input6.on("change", function(newValue) {
+            FormUtils.handleValueChange(input6);
+        });
 
         //
         // CREATE SERVICE OBJECT
@@ -469,15 +471,15 @@ require([
             var tokens = mvc.Components.get("default");
             var deviceName = tokens.get("deviceName");
             var spaceAssignment = tokens.get("spaceAssignment");
-            var deviceShape = tokens.get("deviceShape");
             var coordinates = tokens.get("coordinates");
+            var deviceType = tokens.get("deviceType");
             var KeyID = tokens.get("KeyID");
 
             var record = {
                 "deviceName": deviceName,
                 "spaceAssignment": spaceAssignment,
-                "deviceShape": deviceShape,
-                "coordinates": coordinates
+                "coordinates": coordinates,
+                "deviceType": deviceType
             }
             var uri = "storage/collections/data/devices/";
             if(typeof KeyID != "undefined") {
@@ -495,7 +497,7 @@ require([
                     .done(function() {
                         search1.startSearch();
                         search2.startSearch();
-                        $("#formDeviceConfiguration input[type=text]").val("");
+                        $("#formDeviceConfiguration input").val("");
                         setToken("KeyID", undefined);
                     });
 

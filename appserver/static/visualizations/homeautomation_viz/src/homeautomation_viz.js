@@ -58,8 +58,8 @@ define([
             //these are built during init assuming that they already exist and are static when in use by the general viz.
             //the data update method will look for the CRUD marker.  if the CRUD marker is found, these variables
             //will be rebuilt during every data refresh instead of being static like is done here.
-            service.get("storage/collections/data/spaces/",null,this.storeSpaces);
-            service.get("storage/collections/data/devices/",null,this.storeDevices);
+            //service.get("storage/collections/data/spaces/",null,this.storeSpaces);
+            //service.get("storage/collections/data/devices/",null,this.storeDevices);
 
         },
 
@@ -118,27 +118,82 @@ define([
             var spaceDataCRUD = response.data;
             spaceData = spaceDataCRUD;
             var spaceFeatureGroup = L.featureGroup();
-
-            console.log("drawing spaces");
-            console.log(spacesData);
-            _.each(spacesData, function(space) {
-
-                var spaceopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#f0f0f0"};
+            //console.log("map obj");
+            //console.log(map);
+            _.each(spaceData, function(space) {
+                var spaceopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#8ff442"};
                 var coords = eval(space["coordinates"]);
                 var coordSize = _.size(coords);
                 var spaceObj;
                 if(coordSize == 2) {
-                    spaceObj = L.rectangle(coords, spaceopts);
+                    spaceObj = L.rectangle(coords, spaceopts).addTo(spaceFeatureGroup);
                 } else {
-                    spaceObj = L.polygon(coords, spaceopts);
-                }                
+                    spaceObj = L.polygon(coords, spaceopts).addTo(spaceFeatureGroup);
+                }             
+                spaceObj.bringToFront();
+
                 spaceObj.addTo(spaceFeatureGroup);
             });
             layerGroup.addLayer(spaceFeatureGroup);
+            map.invalidateSize();
+            
 
+            //layerGroup.addTo(map);
         },
         
-  
+        drawDevicesCRUD: function(err, response) {
+            var deviceDataCRUD = response.data;
+            deviceData = deviceDataCRUD;
+            var deviceFeatureGroup = L.featureGroup();
+
+            _.each(deviceData, function(device) {
+                console.log("device data");
+                console.log(device);
+
+                var deviceName = device["deviceName"];
+                var spaceAssignment = device["spaceAssignment"];
+                var coordinates = eval(device["coordinates"]);
+                var deviceType = device["deviceType"];
+
+                var deviceOpts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#424ef4"};
+                var deviceObj = undefined;
+                switch(deviceType) {
+                    case "Light":
+                        deviceOpts["fillColor"] = "#ededed";
+                        break;
+                    case "Contact":
+                        deviceOpts["fillColor"] = "#b1bcbc";
+                        break;
+                    case "Motion":
+                        deviceOpts["fillColor"] = "#0d0d0d";
+                        break;
+                    default:
+                        console.log("There was no deviceType");
+                        break;
+                }
+
+                if(_.size(coordinates) == 1) {
+                    coordinates=coordinates[0];
+                    deviceOpts["radius"] = 0.25;
+                    deviceObj = L.circle(coordinates, deviceOpts);
+                } else if(_.size(coordinates) == 2) {
+                    deviceObj = L.rectangle(coordinates, deviceOpts);
+                } else {
+                    deviceObj = L.polygon(coordinates, deviceOpts);
+                }
+                
+                if(deviceObj != undefined) { 
+                    deviceObj.addTo(deviceFeatureGroup); 
+                } else {
+                    console.log("no device type to add");
+                }
+            });
+            layerGroup.addLayer(deviceFeatureGroup);
+            map.invalidateSize();
+
+            
+
+        },
         // Implement updateView to render a visualization.
         //  'data' will be the data object returned from formatData or from the search
         //  'config' will be the configuration property object
@@ -158,54 +213,61 @@ define([
                 L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.basement_image, MAP_DETAILS.basement_bounds).addTo(map);
                
                 //Changing to fitWorld
-                //map.fitBounds(MAP_DETAILS.total_bounds);
-                map.fitWorld();
+                map.fitBounds(MAP_DETAILS.total_bounds);
+                //map.fitWorld();
 
                 hasGoodDom = true;
                 
-                layerGroup = new L.LayerGroup().addTo(map);
-                
+                layerGroup = new L.LayerGroup() //.addTo(map);
+                map.addLayer(layerGroup);
                 //Removing, hopefully map.fitWorld takes care of this
-                //map.setZoom(4);
+                map.setZoom(4);
             }
 
             console.log("homeautomation_viz updateView running. ");
             
-            
+            if(_.size(dataRows) > 0) {
+                //we have some data to work with.  do this to avoid multiple lookups for no reason.
+
+                layerGroup.clearLayers();
+
+                if(_.size(dataRows) == 1 && dataRows[0]["mode"] != null) {
+                    var crudMode = dataRows[0]["mode"]
+                    if(crudMode == "deviceCRUD") {
+                        console.log("found CRUD mode = " + crudMode);
+                        service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
+                        service.get("storage/collections/data/devices/",null,this.drawDevicesCRUD);
+                        //draw rooms and devices    
+                    } else {
+                        console.log("found CRUD mode = " + crudMode);
+                        service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
+                    }
+                }
 
 
-            layerGroup.clearLayers();
+                //console.log("testing for static space and device vars");
+                //console.log(spaceData);
+                //console.log(deviceData);
 
+                //TODO  - include/exclude room/device drawings based on CRUD process.  Maybe don't want to see rooms if devices are being edited and vice versa
+                
 
-            var crudMode = _.find(dataRows, function(data) {
-                return data["mode"];
-            });
-            if(crudMode == "deviceCRUD") {
-                console.log("found CRUD mode = " + crudMode);
-                service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
-                service.get("storage/collections/data/devices/",null,this.drawDevicesCRUD);
-                //draw rooms and devices
-            } else if(crudMode = "spaceCRUD") {
-                console.log("found CRUD mode = " + crudMode);
-                service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
-                //draw just rooms
+                //TODO  - see above. same shit.  CRUD for the drawing of devices will be room/position/maybe capability & type.  
+                //will be useful to save the devices & rooms to a persistent variable so that we can reference during real search/data enum below
+                //service.get("storage/collections/data/devices/", null, this.drawDevices);
+
+                //TODO  - data enumeration will really just have the device name and the latest stats.  structures from above will dictate position, etc
+                var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
+                _.each(infoDevices, function(data) {
+                    //nadda
+                }, this);
+
             }
 
 
 
-            //TODO  - include/exclude room/device drawings based on CRUD process.  Maybe don't want to see rooms if devices are being edited and vice versa
-            
-
-            //TODO  - see above. same shit.  CRUD for the drawing of devices will be room/position/maybe capability & type.  
-            //will be useful to save the devices & rooms to a persistent variable so that we can reference during real search/data enum below
-            //service.get("storage/collections/data/devices/", null, this.drawDevices);
-
-            //TODO  - data enumeration will really just have the device name and the latest stats.  structures from above will dictate position, etc
-            var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
-            _.each(infoDevices, function(data) {
-                //nadda
-            }, this);
-
+            map.invalidateSize();
+            //layerGroup.addTo(map);
 /*
 
             var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
