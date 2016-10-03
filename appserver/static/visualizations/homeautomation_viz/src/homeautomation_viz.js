@@ -38,8 +38,8 @@ define([
 
     var service = mvc.createService({ owner: "nobody"});
     var layerGroup;
-    var spaceData;
-    var deviceData;
+    var spaceData = undefined;
+    var deviceData = undefined;
     var map;
     var hasGoodDom = false;
 
@@ -116,7 +116,7 @@ define([
 
         drawSpacesCRUD: function(err, response) {
             var spaceDataCRUD = response.data;
-            spaceData = spaceDataCRUD;
+            //spaceData = spaceDataCRUD;
             var spaceFeatureGroup = L.featureGroup();
             //console.log("map obj");
             //console.log(map);
@@ -143,7 +143,7 @@ define([
         
         drawDevicesCRUD: function(err, response) {
             var deviceDataCRUD = response.data;
-            deviceData = deviceDataCRUD;
+            //deviceData = deviceDataCRUD;
             var deviceFeatureGroup = L.featureGroup();
 
             _.each(deviceData, function(device) {
@@ -242,6 +242,57 @@ define([
                         console.log("found CRUD mode = " + crudMode);
                         service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
                     }
+                } else {
+                    var waitCount = 0;
+                    while(waitCount < 500 && (spaceData == undefined || deviceData == undefined)) {
+                        waitCount++;
+                    }
+
+                    if(waitCount >= 500) {
+                        console.log("Timed out waiting for data to populate");
+                    } else {}
+                        //this is the main data processing block
+                        console.log("working in main data processing loop");
+                        var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
+                        _.each(infoDevices, function(data) {
+                            var deviceName = data["deviceName"]; //smartThings field
+                            var contact = data["contact"]; //smartThings field
+                            var switchState = data["switch"]; //smartThings field
+                            var temperature = data["temperature"]; //smartThings field
+                            var switchLevel = data["switchlevel"]; //smartThings field
+                            var motion = data["motion"]; //smartThings field
+
+                            console.log("found deviceName=" + deviceName);
+
+                            _.each(deviceData, function(j) {
+                                console.log("enumerating deviceData metadata");
+                                if(j["deviceName"] == deviceName) {
+                                    console.log("found deviceData metadata that matches search data");
+
+                                    j["contact"] = contact;
+                                    j["switchState"] = switchState;
+                                    j["temperature"] = temperature;
+                                    j["switchLevel"] = switchLevel;
+                                    j["motion"] = motion;
+
+                                    _.each(spaceData, function(i) {  
+                                        console.log("searching space metadata for " + j["spaceAssignment"]);
+                                        //if the metadata space name matches the device metadata space assignment - again an opportunity to find devices with no space assignment. TODO
+                                        if(i["spaceName"] == j["spaceAssignment"]) { 
+                                            console.log("found a matching spaceName, setting temperature to " + temperature);
+
+                                            //set the space metadata temperature to the data record value 
+                                            if(temperature != undefined) {
+                                                i["temperature"] = temperature; 
+                                            } else {
+                                                i["temperature"] = "undefined";
+                                            }
+                                        }  
+                                    }, this);
+                                }
+                            }, this);
+                        }, this);
+                    }                
                 }
 
 
@@ -257,10 +308,6 @@ define([
                 //service.get("storage/collections/data/devices/", null, this.drawDevices);
 
                 //TODO  - data enumeration will really just have the device name and the latest stats.  structures from above will dictate position, etc
-                var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
-                _.each(infoDevices, function(data) {
-                    //nadda
-                }, this);
 
             }
 
