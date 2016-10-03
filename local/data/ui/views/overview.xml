@@ -1,0 +1,32 @@
+<dashboard>
+  <label>Overview</label>
+  <row>
+    <panel>
+      <viz type="homeautomation_viz.homeautomation_viz">
+        <title>Most recent house status</title>
+        <search>
+          <query>index=homeautomation sourcetype=httpevent earliest=-4h| stats latest("capabilities.Contact Sensor.contact") as contact, latest("capabilities.Temperature Measurement.temperature") as temperature, latest("capabilities.Switch.switch") as switchstate, latest("capabilities.Switch Level.level") as switchlevel, latest("capabilities.Motion Sensor.motion") as motion by deviceName</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="homeautomation_viz.homeautomation_viz.coldColor">#00CCFF</option>
+        <option name="homeautomation_viz.homeautomation_viz.coldTemp">65</option>
+        <option name="homeautomation_viz.homeautomation_viz.doorClosedColor">#00FF00</option>
+        <option name="homeautomation_viz.homeautomation_viz.doorOpenColor">#ff6600</option>
+        <option name="homeautomation_viz.homeautomation_viz.hotColor">#ff0000</option>
+        <option name="homeautomation_viz.homeautomation_viz.lightOffColor">#000000</option>
+        <option name="homeautomation_viz.homeautomation_viz.lightOnColor">#ffff00</option>
+        <option name="homeautomation_viz.homeautomation_viz.motionColor">#ffff00</option>
+        <option name="homeautomation_viz.homeautomation_viz.noMotionColor">#000000</option>
+        <option name="homeautomation_viz.homeautomation_viz.normalColor">#555</option>
+        <option name="homeautomation_viz.homeautomation_viz.normalTemp">75</option>
+        <option name="homeautomation_viz.homeautomation_viz.showDoors">true</option>
+        <option name="homeautomation_viz.homeautomation_viz.showLights">1</option>
+        <option name="homeautomation_viz.homeautomation_viz.showMotion">1</option>
+        <option name="homeautomation_viz.homeautomation_viz.showTemps">1</option>
+        <option name="homeautomation_viz.homeautomation_viz.warmColor">#ccff00</option>
+        <option name="homeautomation_viz.homeautomation_viz.warmTemp">85</option>
+      </viz>
+    </panel>
+  </row>
+</dashboard>

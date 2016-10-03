@@ -42,6 +42,7 @@ define([
     var deviceData = undefined;
     var map;
     var hasGoodDom = false;
+    var props = {};
 
     // Extend from SplunkVisualizationBase
     return SplunkVisualizationBase.extend({
@@ -58,8 +59,15 @@ define([
             //these are built during init assuming that they already exist and are static when in use by the general viz.
             //the data update method will look for the CRUD marker.  if the CRUD marker is found, these variables
             //will be rebuilt during every data refresh instead of being static like is done here.
+            
+            //this path assumes to use the current app context
             //service.get("storage/collections/data/spaces/",null,this.storeSpaces);
             //service.get("storage/collections/data/devices/",null,this.storeDevices);
+
+            //full path of kvstore for out of app context
+            service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/spaces/",null,this.storeSpaces);
+            service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/devices/",null,this.storeDevices);
+
 
         },
 
@@ -70,30 +78,58 @@ define([
 
 
         _getConfigParams: function(config) {
-            this.showTemps = +this._getEscapedProperty('showTemps', config) || true;
-            this.showDoors = +this._getEscapedProperty('showDoors', config) || true;
-            this.showLights = +this._getEscapedProperty('showLights', config) || true;
-            this.showMotion = +this._getEscapedProperty('showMotion', config) || true;
+            console.log("updating config parameters");
+            props["showTemps"] = eval(this._getEscapedProperty('showTemps', config));
+            this.showTemps = eval(this._getEscapedProperty('showTemps', config));
 
-            this.coldTemp = +this._getEscapedProperty('coldTemp', config) || 65;
-            this.normalTemp = +this._getEscapedProperty('normalTemp', config) || 75;
-            this.warmTemp = +this._getEscapedProperty('warmTemp', config) || 85;
+            props["showDoors"] = eval(this._getEscapedProperty('showDoors', config));
+            this.showDoors = eval(this._getEscapedProperty('showDoors', config));
+            
+            props["showLights"] = eval(this._getEscapedProperty('showLights', config));
+            this.showLights = eval(this._getEscapedProperty('showLights', config));
+            
+            props["showMotion"] = eval(this._getEscapedProperty('showMotion', config));
+            this.showMotion = eval(this._getEscapedProperty('showMotion', config));
+            
+            props["coldTemp"] = this._getEscapedProperty('coldTemp', config);
+            this.coldTemp = this._getEscapedProperty('coldTemp', config);
+            
+            props["normalTemp"] = this._getEscapedProperty('normalTemp', config);
+            this.normalTemp = this._getEscapedProperty('normalTemp', config);
+            
+            props["warmTemp"] = this._getEscapedProperty('warmTemp', config);
+            this.warmTemp = this._getEscapedProperty('warmTemp', config);
 
-            this.coldColor = +this._getEscapedProperty('colorColor', config) || '#00CCFF';
-            this.normalColor = +this._getEscapedProperty('normalColor', config) || '#FFFFFF';
-            this.warmColor = +this._getEscapedProperty('warmColor', config) || '#CCFF00';
-            this.hotColor = +this._getEscapedProperty('hotColor', config) || '#FF0000';
+            props["coldColor"] = this._getEscapedProperty('coldColor', config);
+            this.coldColor = this._getEscapedProperty('coldColor', config);
+            
+            props["normalColor"] = this._getEscapedProperty('normalColor', config);
+            this.normalColor = this._getEscapedProperty('normalColor', config);
+            
+            props["warmColor"] = this._getEscapedProperty('warmColor', config);
+            this.warmColor = this._getEscapedProperty('warmColor', config);
+            
+            props["hotColor"] = this._getEscapedProperty('hotColor', config);
+            this.hotColor = this._getEscapedProperty('hotColor', config);
 
-            this.doorOpenColor = +this._getEscapedProperty('doorOpenColor', config) || '#ff6600';
-            this.doorClosedColor = +this._getEscapedProperty('doorClosedColor', config) || '#00FF00';
-
-            this.lightOnColor = +this._getEscapedProperty('lightOnColor', config) || '#ffff00';
-            this.lightOffColor = +this._getEscapedProperty('lightOffColor', config) || '#000000';
-
-            this.motionColor = +this._getEscapedProperty('motionColor', config) || '#ffff00';
-            this.noMotionColor = +this._getEscapedProperty('noMotionColor', config) || '#000000';
+            props["doorOpenColor"] = this._getEscapedProperty('doorOpenColor', config);
+            this.doorOpenColor = this._getEscapedProperty('doorOpenColor', config);
 
 
+            props["doorClosedColor"] = this._getEscapedProperty('doorClosedColor', config);
+            this.doorClosedColor = this._getEscapedProperty('doorClosedColor', config);
+
+            props["lightOnColor"] = this._getEscapedProperty('lightOnColor', config);
+            this.lightOnColor = this._getEscapedProperty('lightOnColor', config);
+            
+            props["lightOffColor"] = this._getEscapedProperty('lightOffColor', config);
+            this.lightOffColor = this._getEscapedProperty('lightOffColor', config);
+
+            props["motionColor"] = this._getEscapedProperty('motionColor', config);
+            this.motionColor = this._getEscapedProperty('motionColor', config);
+
+            props["noMotionColor"] = this._getEscapedProperty('noMotionColor', config);
+            this.noMotionColor = this._getEscapedProperty('noMotionColor', config);
         },
 
         // Optionally implement to format data returned from search. 
@@ -118,9 +154,7 @@ define([
             var spaceDataCRUD = response.data;
             //spaceData = spaceDataCRUD;
             var spaceFeatureGroup = L.featureGroup();
-            //console.log("map obj");
-            //console.log(map);
-            _.each(spaceData, function(space) {
+            _.each(spaceDataCRUD, function(space) {
                 var spaceopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#8ff442"};
                 var coords = eval(space["coordinates"]);
                 var coordSize = _.size(coords);
@@ -140,15 +174,53 @@ define([
 
             //layerGroup.addTo(map);
         },
+
+        drawSpacesProd: function() {
+            var spaceFeatureGroup = L.featureGroup();
+            _.each(spaceData, function(space) {
+                var spaceopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#8ff442"};
+                var coords = eval(space["coordinates"]);
+                var coordSize = _.size(coords);
+                var spaceObj;
+
+                if(props["showTemps"]) {
+
+                    if(space["temperature"] == undefined || space["temperature"] == "undefined") {
+                        spaceopts["fillColor"] = "#ffffff";
+                    } else {
+                        var roomColor = props["hotColor"];
+                        var temperature = space["temperature"];
+                        if(temperature <= props["warmTemp"]) { roomColor = props["warmColor"]; }
+                        if(temperature <= props["normalTemp"]) { roomColor = props["normalColor"]; }
+                        if(temperature <= props["coldTemp"]) { roomColor = props["coldColor"]; }
+                        spaceopts["fillColor"] = roomColor;
+                    }
+                }
+
+
+                
+                if(coordSize == 2) {
+                    spaceObj = L.rectangle(coords, spaceopts).addTo(spaceFeatureGroup);
+                } else {
+                    spaceObj = L.polygon(coords, spaceopts).addTo(spaceFeatureGroup);
+                }             
+                spaceObj.bringToFront();
+                spaceObj.bindTooltip("<div style='width:250px; background-color: #ffffff; border-style:solid; border-width:2px; border-color:#000000'><b>" + space["spaceName"] + "</b><br/>Temperature: " + space["temperature"] + "</div>", {opacity:1});
+                spaceObj.addTo(spaceFeatureGroup);
+            });
+            layerGroup.addLayer(spaceFeatureGroup);
+            
+
+            //layerGroup.addTo(map);
+        },
+
         
         drawDevicesCRUD: function(err, response) {
             var deviceDataCRUD = response.data;
             //deviceData = deviceDataCRUD;
             var deviceFeatureGroup = L.featureGroup();
 
-            _.each(deviceData, function(device) {
-                console.log("device data");
-                console.log(device);
+            _.each(deviceDataCRUD, function(device) {
 
                 var deviceName = device["deviceName"];
                 var spaceAssignment = device["spaceAssignment"];
@@ -194,10 +266,95 @@ define([
             
 
         },
+
+
+        drawDevicesProd: function() {
+            var deviceFeatureGroup = L.featureGroup();
+
+            _.each(deviceData, function(device) {
+
+                var deviceName = device["deviceName"];
+                var spaceAssignment = device["spaceAssignment"];
+                var coordinates = eval(device["coordinates"]);
+                var deviceType = device["deviceType"];
+
+                var deviceOpts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#424ef4"};
+                var deviceObj = undefined;
+                var markerColor = "#000000";
+                var showDevice = false;
+                //showDoors (contact), showLights (Light), showMotion (Motion)
+                switch(deviceType) {
+                    case "Contact":
+                        if(eval(props["showDoors"])) {
+                            showDevice = true;
+                            if(device["contact"] == "closed") { deviceOpts["fillColor"] = props["doorClosedColor"]; }
+                            if(device["contact"] == "open") { deviceOpts["fillColor"] = props["doorOpenColor"]; }
+                        } else {
+                            console.log("showDoors is false");
+                        }
+                        break;
+
+                    case "Light":
+                        if(eval(props["showLights"])) {
+                            showDevice = true;
+                            if(device["switchState"] == "on") { deviceOpts["fillColor"] = props["lightOnColor"]; }
+                            if(device["switchState"] == "off") { deviceOpts["fillColor"] = props["lightOffColor"]; }
+                        }
+                        break;
+
+                    case "Motion":
+                        if(eval(props["showMotion"])) {
+                            showDevice = true;
+                            if(device["motion"] == "active") { deviceOpts["fillColor"] = props["motionColor"] }
+                            if(device["motion"] == "inactive") { deviceOpts["fillColor"] = props["noMotionColor"]; }
+                        }
+                        break;
+
+                    default:
+                        console.log("No valid device type found");
+
+                }
+
+                if(showDevice) {
+                    var toolTipText = "<div style='width:250px; background-color: #ffffff; border-width:2px; border-style:solid; border-color:#000000'><b>Device Name: " + device["deviceName"] + "<br/>";
+                    _.each(device, function(val,name) {
+                        if(val != undefined && name != "deviceName" && name != "_key" && name != "coordinates" && name != "_user") {
+                            toolTipText += name + ": " + val + "<br/>";
+                        }
+                    });
+                    toolTipText += "</div>";
+
+                    if(_.size(coordinates) == 1) {
+                        coordinates=coordinates[0];
+                        deviceOpts["radius"] = 0.25;
+                        deviceObj = L.circle(coordinates, deviceOpts);
+                    } else if(_.size(coordinates) == 2) {
+                        deviceObj = L.rectangle(coordinates, deviceOpts);
+                    } else {
+                        deviceObj = L.polygon(coordinates, deviceOpts);
+                    }
+                    
+                    if(deviceObj != undefined) { 
+                        deviceObj.bindTooltip(toolTipText, {opacity:1});
+                        deviceObj.addTo(deviceFeatureGroup); 
+                    } else {
+                        console.log("no device type to add");
+                    }
+                }
+            });
+            layerGroup.addLayer(deviceFeatureGroup);
+            //map.invalidateSize();
+
+            
+
+        },
+
         // Implement updateView to render a visualization.
         //  'data' will be the data object returned from formatData or from the search
         //  'config' will be the configuration property object
         updateView: function(data, config) {
+
+            this._getConfigParams(config);
             //var dataRows = data.rows; //this is used for ROW_MAJOR_OUTPUT_MODE
             var dataRows = data.results; //this is used for RAW_OUTPUT_MODE
             
@@ -245,29 +402,39 @@ define([
                 } else {
                     var waitCount = 0;
                     while(waitCount < 500 && (spaceData == undefined || deviceData == undefined)) {
+                        //this would MUCH better be done with a setTimeout that calls out to the below code in a function TODO
                         waitCount++;
                     }
 
                     if(waitCount >= 500) {
                         console.log("Timed out waiting for data to populate");
-                    } else {}
+                    } else {
                         //this is the main data processing block
+                        console.log("properties");
+                        console.log(props);
                         console.log("working in main data processing loop");
+                        console.log("spaces");
+                        console.log(spaceData);
+                        console.log("devices");
+                        console.log(deviceData);
+
+
+
                         var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
                         _.each(infoDevices, function(data) {
                             var deviceName = data["deviceName"]; //smartThings field
                             var contact = data["contact"]; //smartThings field
-                            var switchState = data["switch"]; //smartThings field
+                            var switchState = data["switchstate"]; //smartThings field
                             var temperature = data["temperature"]; //smartThings field
                             var switchLevel = data["switchlevel"]; //smartThings field
                             var motion = data["motion"]; //smartThings field
 
-                            console.log("found deviceName=" + deviceName);
+                            //console.log("found deviceName=" + deviceName);
 
                             _.each(deviceData, function(j) {
-                                console.log("enumerating deviceData metadata");
+                                //console.log("enumerating deviceData metadata");
                                 if(j["deviceName"] == deviceName) {
-                                    console.log("found deviceData metadata that matches search data");
+                                    //console.log("found deviceData metadata that matches search data");
 
                                     j["contact"] = contact;
                                     j["switchState"] = switchState;
@@ -276,10 +443,10 @@ define([
                                     j["motion"] = motion;
 
                                     _.each(spaceData, function(i) {  
-                                        console.log("searching space metadata for " + j["spaceAssignment"]);
+                                        //console.log("searching space metadata for " + j["spaceAssignment"]);
                                         //if the metadata space name matches the device metadata space assignment - again an opportunity to find devices with no space assignment. TODO
                                         if(i["spaceName"] == j["spaceAssignment"]) { 
-                                            console.log("found a matching spaceName, setting temperature to " + temperature);
+                                            //console.log("found a matching spaceName, setting temperature to " + temperature);
 
                                             //set the space metadata temperature to the data record value 
                                             if(temperature != undefined) {
@@ -292,6 +459,9 @@ define([
                                 }
                             }, this);
                         }, this);
+                        this.drawSpacesProd();
+                        this.drawDevicesProd();
+
                     }                
                 }
 
@@ -311,8 +481,7 @@ define([
 
             }
 
-
-
+            
             map.invalidateSize();
             //layerGroup.addTo(map);
 /*
