@@ -1,0 +1,149 @@
+/**
+ *  Splunk Logging Automation
+ *
+ *  Copyright 2016 nick zambo
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ */
+definition(
+    name: "Splunk Logging Automation",
+    namespace: "nzambo.splunk",
+    author: "nick zambo",
+    description: "Splunk logging",
+    category: "Convenience",
+    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
+    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
+    iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
+    oauth: false)
+
+
+preferences {
+	section("Title") {
+		input "contact", "capability.contactSensor", title: "Select a contact sensor", required: false, multiple: true
+		input "light", "capability.switch", title: "Select a light or outlet", required: false, multiple: true
+        input "temp", "capability.temperatureMeasurement", title: "Temperature", required: false, multiple: true
+        input "presence", "capability.presenceSensor", title: "Presense", required: false, multiple: true
+        input "buttons", "capability.button", title: "Buttons", required: false, multiple: true
+        input "motion", "capability.motionSensor", title: "Motion", required: false, multiple: true
+        input "humidity", "capability.relativeHumidityMeasurement", title: "Humidity", required: false, multiple: true
+        input "tamper", "capability.tamperAlert", title: "Tamper", required: false, multiple: true
+        input "ultraviolet", "capability.ultravioletIndex", title: "UV", required: false, multiple: true
+        
+	}
+    section ("Splunk Server") {
+        input "splunk_host", "text", title: "Splunk Hostname/IP", required: true
+        input "use_ssl", "boolean", title: "Use SSL?", required: true
+        input "splunk_port", "number", title: "Splunk Port", required: true
+        input "splunk_token", "text", title: "Splunk Authentication Token", required: true
+    }
+}
+
+def installed() {
+	log.debug "Installed with settings: ${settings}"
+
+	initialize()
+}
+
+def updated() {
+	log.debug "Updated with settings: ${settings}"
+
+	unsubscribe()
+	initialize()
+}
+
+def initialize() {
+	subscribe(contact, "contact", stateChangeHandler)
+	subscribe(light, "switch", stateChangeHandler)
+    subscribe(presence, "presence", stateChangeHandler)
+    subscribe(buttons, "buttons", stateChangeHandler)
+    subscribe(motion, "motion", stateChangeHandler)
+    subscribe(humidity, "humidity", stateChangeHandler)
+    subscribe(tamper, "tamper", stateChangeHandler)
+    subscribe(ultraviolet, "ultraviolet", stateChangeHandler)
+    runEvery5Minutes(reportStates)
+}
+
+def logToSplunk(def details) {
+  	def splunk_server = "${splunk_host}:${splunk_port}"
+
+	def postUrl = ""
+    def hecPath = "/services/collector/event"
+
+	if(use_ssl == "true" || use_ssl.toBoolean()) { postUrl += "https://" } else { postUrl += "http://" }
+	postUrl += splunk_server
+
+	def suuid = UUID.randomUUID().toString()
+	def post = [uri: "${postUrl}", path: "${hecPath}", headers: ['X-Splunk-Request-Channel': "${suuid}", 'Authorization':"Splunk ${splunk_token}"],body:details] 
+
+    try {
+		httpPost(post) { 
+        	log.debug("HTTP Resp: $it.data") 
+        	log.debug post    
+        }
+    } catch (e) {
+    	log.debug "Error posting: $e"
+        log.debug post
+    }
+}
+
+def deviceToJSON(eventType, device) {
+	def theDevice = device
+    def deviceCapabilities = theDevice.capabilities
+	def eventString = ""
+    eventString += "{\"event\":{\"eventType\":\"${eventType}\",\"deviceName\":\"${theDevice.label}\", \"deviceId\":\"${theDevice.id}\",\"capabilities\":{"
+    deviceCapabilities.each { cap ->
+    	eventString = eventString + "\"${cap.name}\":{"
+        cap.attributes.each { attr ->
+            def currentValue = theDevice.currentValue(attr.name)
+            eventString = eventString + "\"${attr.name}\":\"${currentValue}\","
+        }
+        if(eventString[-1] == ",") {
+            eventString = eventString.substring(0,eventString.length()-1) + "},"
+        } else {
+            eventString = eventString + "},"
+        }
+    }
+    if(eventString[-1] == ",") {
+        eventString = eventString.substring(0,eventString.length()-1) + "}"
+    } else {
+        eventString = eventString + "}"
+    }
+
+    eventString = eventString + "}}"
+    return eventString
+
+}
+
+
+def reportStates() {
+	def detailList = []
+	temp.each { detailList.add(deviceToJSON("schedule", it)) }
+    light.each { detailList.add(deviceToJSON("schedule", it)) }
+    contact.each { detailList.add(deviceToJSON("schedule", it)) }
+    presence.each { detailList.add(deviceToJSON("schedule", it)) }
+    motion.each { detailList.add(deviceToJSON("schedule", it)) }
+    humidity.each { detailList.add(deviceToJSON("schedule", it)) }
+    tamper.each { detailList.add(deviceToJSON("schedule", it)) }
+    ultraviolet.each { detailList.add(deviceToJSON("schedule", it)) }    
+    
+    def alarmState = location.currentState("alarmSystemStatus")
+    def alarmEventString = "{\"event\":{\"eventType\":\"schedule\",\"alarmStatus\":\"${alarmState.value}\"}}"
+    detailList.add(alarmEventString)
+    
+    detailList.unique()
+    detailList.each { logToSplunk it }
+}
+
+def stateChangeHandler(evt) {
+	def theDevice = evt.device
+   	def details = deviceToJSON("stateChange", theDevice)
+	logToSplunk details
+}
