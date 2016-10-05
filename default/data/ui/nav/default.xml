@@ -2,7 +2,7 @@
   <view name="overview" default="true"/>
   <collection label="Space and Devices">
      <view name="logical_space_config"/>
-     <view name="Logical_device_config"/>
+     <view name="logical_device_config"/>
   </collection>
   <view name="search" />
 </nav>
