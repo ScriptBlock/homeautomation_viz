@@ -59,12 +59,6 @@ define([
             //these are built during init assuming that they already exist and are static when in use by the general viz.
             //the data update method will look for the CRUD marker.  if the CRUD marker is found, these variables
             //will be rebuilt during every data refresh instead of being static like is done here.
-            
-            //this path assumes to use the current app context
-            //service.get("storage/collections/data/spaces/",null,this.storeSpaces);
-            //service.get("storage/collections/data/devices/",null,this.storeDevices);
-
-            //full path of kvstore for out of app context
             service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/spaces/",null,this.storeSpaces);
             service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/devices/",null,this.storeDevices);
 
@@ -80,56 +74,22 @@ define([
         _getConfigParams: function(config) {
             console.log("updating config parameters");
             props["showTemps"] = eval(this._getEscapedProperty('showTemps', config));
-            this.showTemps = eval(this._getEscapedProperty('showTemps', config));
-
             props["showDoors"] = eval(this._getEscapedProperty('showDoors', config));
-            this.showDoors = eval(this._getEscapedProperty('showDoors', config));
-            
             props["showLights"] = eval(this._getEscapedProperty('showLights', config));
-            this.showLights = eval(this._getEscapedProperty('showLights', config));
-            
             props["showMotion"] = eval(this._getEscapedProperty('showMotion', config));
-            this.showMotion = eval(this._getEscapedProperty('showMotion', config));
-            
             props["coldTemp"] = this._getEscapedProperty('coldTemp', config);
-            this.coldTemp = this._getEscapedProperty('coldTemp', config);
-            
             props["normalTemp"] = this._getEscapedProperty('normalTemp', config);
-            this.normalTemp = this._getEscapedProperty('normalTemp', config);
-            
             props["warmTemp"] = this._getEscapedProperty('warmTemp', config);
-            this.warmTemp = this._getEscapedProperty('warmTemp', config);
-
             props["coldColor"] = this._getEscapedProperty('coldColor', config);
-            this.coldColor = this._getEscapedProperty('coldColor', config);
-            
             props["normalColor"] = this._getEscapedProperty('normalColor', config);
-            this.normalColor = this._getEscapedProperty('normalColor', config);
-            
             props["warmColor"] = this._getEscapedProperty('warmColor', config);
-            this.warmColor = this._getEscapedProperty('warmColor', config);
-            
             props["hotColor"] = this._getEscapedProperty('hotColor', config);
-            this.hotColor = this._getEscapedProperty('hotColor', config);
-
             props["doorOpenColor"] = this._getEscapedProperty('doorOpenColor', config);
-            this.doorOpenColor = this._getEscapedProperty('doorOpenColor', config);
-
-
             props["doorClosedColor"] = this._getEscapedProperty('doorClosedColor', config);
-            this.doorClosedColor = this._getEscapedProperty('doorClosedColor', config);
-
             props["lightOnColor"] = this._getEscapedProperty('lightOnColor', config);
-            this.lightOnColor = this._getEscapedProperty('lightOnColor', config);
-            
             props["lightOffColor"] = this._getEscapedProperty('lightOffColor', config);
-            this.lightOffColor = this._getEscapedProperty('lightOffColor', config);
-
             props["motionColor"] = this._getEscapedProperty('motionColor', config);
-            this.motionColor = this._getEscapedProperty('motionColor', config);
-
             props["noMotionColor"] = this._getEscapedProperty('noMotionColor', config);
-            this.noMotionColor = this._getEscapedProperty('noMotionColor', config);
         },
 
         // Optionally implement to format data returned from search. 
@@ -402,7 +362,7 @@ define([
                 } else {
                     var waitCount = 0;
                     while(waitCount < 500 && (spaceData == undefined || deviceData == undefined)) {
-                        //this would MUCH better be done with a setTimeout that calls out to the below code in a function TODO
+                        //this would MUCH better be done with a setTimeout that calls out to the below code in a function.. or promises or some new fangled way that I don't know about TODO
                         waitCount++;
                     }
 
@@ -429,13 +389,8 @@ define([
                             var switchLevel = data["switchlevel"]; //smartThings field
                             var motion = data["motion"]; //smartThings field
 
-                            //console.log("found deviceName=" + deviceName);
-
                             _.each(deviceData, function(j) {
-                                //console.log("enumerating deviceData metadata");
                                 if(j["deviceName"] == deviceName) {
-                                    //console.log("found deviceData metadata that matches search data");
-
                                     j["contact"] = contact;
                                     j["switchState"] = switchState;
                                     j["temperature"] = temperature;
@@ -443,12 +398,7 @@ define([
                                     j["motion"] = motion;
 
                                     _.each(spaceData, function(i) {  
-                                        //console.log("searching space metadata for " + j["spaceAssignment"]);
-                                        //if the metadata space name matches the device metadata space assignment - again an opportunity to find devices with no space assignment. TODO
                                         if(i["spaceName"] == j["spaceAssignment"]) { 
-                                            //console.log("found a matching spaceName, setting temperature to " + temperature);
-
-                                            //set the space metadata temperature to the data record value 
                                             if(temperature != undefined) {
                                                 i["temperature"] = temperature; 
                                             } else {
@@ -464,107 +414,8 @@ define([
 
                     }                
                 }
-
-
-                //console.log("testing for static space and device vars");
-                //console.log(spaceData);
-                //console.log(deviceData);
-
-                //TODO  - include/exclude room/device drawings based on CRUD process.  Maybe don't want to see rooms if devices are being edited and vice versa
-                
-
-                //TODO  - see above. same shit.  CRUD for the drawing of devices will be room/position/maybe capability & type.  
-                //will be useful to save the devices & rooms to a persistent variable so that we can reference during real search/data enum below
-                //service.get("storage/collections/data/devices/", null, this.drawDevices);
-
-                //TODO  - data enumeration will really just have the device name and the latest stats.  structures from above will dictate position, etc
-
             }
-
-            
             map.invalidateSize();
-            //layerGroup.addTo(map);
-/*
-
-            var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
-            _.each(infoDevices, function(data) {
-                var fg = L.featureGroup();
-                var fgPopupText = "";
-
-                var deviceName = data["deviceName"]; //smartThings field
-                var contact = data["contact"]; //smartThings field
-                var switchState = data["switch"]; //smartThings field
-                var temperature = data["temperature"]; //smartThings field
-                var switchLevel = data["switchlevel"]; //smartThings field
-                var motion = data["motion"]; //smartThings field
-
-                var roomshape = data["roomshape"]; //lookup field
-                var roomcoords = eval(data["roomcoords"]);  //lookup field                             
-                var devicecoords = eval(data["coords"]); //lookup field                                    
-                var deviceshape = data["shape"]; //lookup field
-                var deviceRoom = data["deviceroom"]; //lookup field
-                var deviceType = data["type"]; //lookup field 
-
-
-                console.log("main loop.. working with data");
-                console.log("deviceroom: " + deviceRoom);
-                roomcoords;
-                var test = (roomcoords !== eval("[[0,0],[0,0]]"));
-                console.log("test: " + test);
-
-                //draw room
-                if(roomcoords !== eval("[[0,0],[0,0]]")) { //
-                    console.log("drawing room");
-                    var roomColor = "#f5f5dc"; //default to beige in case "showtemps" is off.
-
-                    console.log("show temps = " + this.showTemps);
-                    if(this.showTemps || this.showTemps == "true") {
-                        console.log("temperature = " + temperature);
-                        roomColor = this.hotColor;
-                        if(temperature <= this.warmTemp) { roomColor = this.warmColor; }
-                        if(temperature <= this.normalTemp) { roomColor = this.normalColor; }
-                        if(temperature <= this.coldTemp) { roomColor = this.coldColor; }
-                    }
-
-
-                    var roomopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:roomColor};
-                    var roomObj;
-                    if(roomshape == "Rectangle") { roomObj = L.rectangle(roomcoords, roomopts); }
-                    if(roomshape == "Polyline") { roomObj = L.polygon(roomcoords, roomopts); }
-                    roomObj.addTo(fg);
-                    fgPopupText = "<b>" + deviceRoom + "</b><br>Temperature: " + temperature;
-                }
-
-                //draw markers
-                //doors
-                if(this.showDoors || this.showDoors == "true") {
-                    if(contact != null && contact != "") {
-                        var markerColor = "#000000";
-                        if(contact == "closed") { markerColor = this.doorClosedColor; }
-                        if(contact == "open") { markerColor = this.doorOpenColor; }
-
-                        var opts = {weight:1,stroke:true,color:"black", opacity:1, fillOpacity:1, fillColor:markerColor};
-                        L.rectangle(coords, opts).addTo(fg);
-                        fgPopupText = "<b>" + deviceName + "</b><br>State: " + contact;
-                    }
-                }
-
-                //lights
-                if(this.showLights || this.showLights == "true") {
-                    if(switchState != null && switchState != "") {
-                        var markerColor = "#000000";
-                        if(switchState == "on") { markerColor = this.lightOnColor; }
-                        if(switchState == "off") { markerColor = this.lightOffColor; }
-
-                        var opts = {weight:1,stroke:true,color:"black", opacity:1, fillOpacity:1, fillColor:markerColor};
-                        L.circle(coords, opts).addTo(fg);
-                        fgPopupText = "<b>" + deviceName + "</b><br>State: " + switchState + "<br>Level: " + switchLevel;
-                    }
-                }
-                fg.bindPopup(fgPopupText);
-                layerGroup.addLayer(fg);
-            },this);
-*/
         },
 
         // Search data params
