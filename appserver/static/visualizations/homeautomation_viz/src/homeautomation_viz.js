@@ -35,6 +35,10 @@ define([
         total_bounds: [[0,0],[20,40]]
     }
 
+    //attempting data load with deferred objects
+    var spaceDataDeferred = $.Deferred();
+    var deviceDataDeferred = $.Deferred();
+
 
     var service = mvc.createService({ owner: "nobody"});
     var layerGroup;
@@ -102,11 +106,15 @@ define([
         },
 
         storeSpaces: function(err, response) {
+            console.log("storespace is being called.  setting the spaceDataDeferred object to resolved");
             spaceData = response.data;
+            spaceDataDeferred.resolve(spaceData);
         },
 
         storeDevices: function(err, response) {
+            console.log("storeDevices is being called.  setting the deviceDataDeferred object to resolved");
             deviceData = response.data;
+            deviceDataDeferred.resolve(deviceData);
         },
 
 
@@ -314,6 +322,9 @@ define([
         //  'config' will be the configuration property object
         updateView: function(data, config) {
 
+
+
+
             this._getConfigParams(config);
             //var dataRows = data.rows; //this is used for ROW_MAJOR_OUTPUT_MODE
             var dataRows = data.results; //this is used for RAW_OUTPUT_MODE
@@ -409,8 +420,13 @@ define([
                                 }
                             }, this);
                         }, this);
-                        this.drawSpacesProd();
-                        this.drawDevicesProd();
+                        $.when(spaceDataDeferred, deviceDataDeferred).done(function draw() {
+                            console.log("Deferred when method has been called - presumably because spacedata and devicedata are populated");
+                            this.drawSpacesProd();
+                            this.drawDevicesProd();
+                        });
+//                        this.drawSpacesProd();
+//                        this.drawDevicesProd();
 
                     }                
                 }
