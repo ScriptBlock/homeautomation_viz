@@ -47,16 +47,18 @@ define([
     var map;
     var hasGoodDom = false;
     var props = {};
+    var extendedClass;
 
     // Extend from SplunkVisualizationBase
     return SplunkVisualizationBase.extend({
-  
+        
+
         initialize: function() {
             SplunkVisualizationBase.prototype.initialize.apply(this, arguments);
             this.$el = $(this.el);
             $(this.el).addClass("leaflet_map");
             hasGoodDom = false;
-
+            extendedClass = this;
             console.log("homeautomation_viz initialize running");
             console.log("building space and device data in initialize");
 
@@ -258,15 +260,15 @@ define([
                             if(device["contact"] == "closed") { deviceOpts["fillColor"] = props["doorClosedColor"]; }
                             if(device["contact"] == "open") { deviceOpts["fillColor"] = props["doorOpenColor"]; }
                         } else {
-                            console.log("showDoors is false");
+                            //console.log("showDoors is false");
                         }
                         break;
 
                     case "Light":
                         if(eval(props["showLights"])) {
                             showDevice = true;
-                            if(device["switchState"] == "on") { deviceOpts["fillColor"] = props["lightOnColor"]; }
-                            if(device["switchState"] == "off") { deviceOpts["fillColor"] = props["lightOffColor"]; }
+                            if(device["switchState"] == "on" || device["switchState"] == "turningOn") { deviceOpts["fillColor"] = props["lightOnColor"]; }
+                            if(device["switchState"] == "off" || device["switchState"] == "turningOff") { deviceOpts["fillColor"] = props["lightOffColor"]; }
                         }
                         break;
 
@@ -371,64 +373,40 @@ define([
                         service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
                     }
                 } else {
-                    var waitCount = 0;
-                    while(waitCount < 500 && (spaceData == undefined || deviceData == undefined)) {
-                        //this would MUCH better be done with a setTimeout that calls out to the below code in a function.. or promises or some new fangled way that I don't know about TODO
-                        waitCount++;
-                    }
+                    var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
+                    _.each(infoDevices, function(data) {
+                        var deviceName = data["deviceName"]; //smartThings field
+                        var contact = data["contact"]; //smartThings field
+                        var switchState = data["switchstate"]; //smartThings field
+                        var temperature = data["temperature"]; //smartThings field
+                        var switchLevel = data["switchlevel"]; //smartThings field
+                        var motion = data["motion"]; //smartThings field
 
-                    if(waitCount >= 500) {
-                        console.log("Timed out waiting for data to populate");
-                    } else {
-                        //this is the main data processing block
-                        console.log("properties");
-                        console.log(props);
-                        console.log("working in main data processing loop");
-                        console.log("spaces");
-                        console.log(spaceData);
-                        console.log("devices");
-                        console.log(deviceData);
+                        _.each(deviceData, function(j) {
+                            if(j["deviceName"] == deviceName) {
+                                j["contact"] = contact;
+                                j["switchState"] = switchState;
+                                j["temperature"] = temperature;
+                                j["switchLevel"] = switchLevel;
+                                j["motion"] = motion;
 
-
-
-                        var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
-                        _.each(infoDevices, function(data) {
-                            var deviceName = data["deviceName"]; //smartThings field
-                            var contact = data["contact"]; //smartThings field
-                            var switchState = data["switchstate"]; //smartThings field
-                            var temperature = data["temperature"]; //smartThings field
-                            var switchLevel = data["switchlevel"]; //smartThings field
-                            var motion = data["motion"]; //smartThings field
-
-                            _.each(deviceData, function(j) {
-                                if(j["deviceName"] == deviceName) {
-                                    j["contact"] = contact;
-                                    j["switchState"] = switchState;
-                                    j["temperature"] = temperature;
-                                    j["switchLevel"] = switchLevel;
-                                    j["motion"] = motion;
-
-                                    _.each(spaceData, function(i) {  
-                                        if(i["spaceName"] == j["spaceAssignment"]) { 
-                                            if(temperature != undefined) {
-                                                i["temperature"] = temperature; 
-                                            } else {
-                                                i["temperature"] = "undefined";
-                                            }
-                                        }  
-                                    }, this);
-                                }
-                            }, this);
+                                _.each(spaceData, function(i) {  
+                                    if(i["spaceName"] == j["spaceAssignment"]) { 
+                                        if(temperature != undefined) {
+                                            i["temperature"] = temperature; 
+                                        } else {
+                                            i["temperature"] = "undefined";
+                                        }
+                                    }  
+                                }, this);
+                            }
                         }, this);
-                        $.when(spaceDataDeferred, deviceDataDeferred).done(function draw() {
-                            console.log("Deferred when method has been called - presumably because spacedata and devicedata are populated");
-                            this.drawSpacesProd();
-                            this.drawDevicesProd();
-                        });
-//                        this.drawSpacesProd();
-//                        this.drawDevicesProd();
-
-                    }                
+                    }, this);
+                    $.when(spaceDataDeferred, deviceDataDeferred).done(function draw() {
+                        console.log("Deferred when method has been called - presumably because spacedata and devicedata are populated");
+                        extendedClass.drawSpacesProd();
+                        extendedClass.drawDevicesProd();
+                    });
                 }
             }
             map.invalidateSize();
