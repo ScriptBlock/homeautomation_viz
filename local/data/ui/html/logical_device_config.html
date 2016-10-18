@@ -332,23 +332,27 @@ require([
             //$('#formDeviceConfiguration input[id^="input1"]').val(e.data["row.deviceName"]);
             //FormUtils.handleValueChange(input1);
             setToken("deviceName", e.data["row.deviceName"]);
+            input1.val(e.data["row.deviceName"]);
 
             //$('#formDeviceConfiguration input[id^="input2"]').val(e.data["row.spaceAssignment"]);
             //FormUtils.handleValueChange(input2);
             setToken("spaceAssignment", e.data["row.spaceAssignment"]);
+            input2.val(e.data["row.spaceAssignment"]);
 
             //$('#formDeviceConfiguration input[id^="input4"]').val(e.data["row.coordinates"]);
             //FormUtils.handleValueChange(input4);
             setToken("coordinates", e.data["row.coordinates"]);
-
+            input4.val(e.data["row.coordinates"]);
 
             //$('#formDeviceConfiguration input[id^="input5"]').val(e.data["row.KeyID"]);
             //FormUtils.handleValueChange(input5);
             setToken("KeyID", e.data["row.KeyID"]);
+            input5.val(e.data["row.KeyID"]);
 
             //$('#formDeviceConfiguration input[id^="input6"]').val(e.data["row.deviceType"]);
             //FormUtils.handleValueChange(input6);
             setToken("deviceType", e.data["row.deviceType"]);
+            input6.val(e.data["row.deviceType"]);
         });
 
         var element2 = new VisualizationElement({
