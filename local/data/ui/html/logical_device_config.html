@@ -222,7 +222,7 @@ require([
         var search1 = new SearchManager({
             "id": "search1",
             "latest_time": "$latest$",
-            "search": "| inputlookup devices_lookup | eval KeyID = _key | table deviceName, spaceAssignment, coordinates, deviceType, KeyID",
+            "search": "| inputlookup devices_lookup | where location=$form.indexchoice$ | eval KeyID = _key | table deviceName, spaceAssignment, coordinates, deviceType, location, KeyID",
             "earliest_time": "0",
             "sample_ratio": null,
             "cancelOnUnload": true,
@@ -236,7 +236,7 @@ require([
         var search2 = new SearchManager({
             "id": "search2",
             "latest_time": "$latest$",
-            "search": '| makeresults | eval mode="deviceCRUD"',
+            "search": '| makeresults | eval mode="deviceCRUD" | eval location=$form.indexchoice$',
             "earliest_time": "0",
             "sample_ratio": null,
             "cancelOnUnload": true,
@@ -266,7 +266,7 @@ require([
         var search4 = new SearchManager({
             "id": "search4",
             "latest_time": "$latest$",
-            "search": "| inputlookup spaces_lookup | table spaceName",
+            "search": "| inputlookup spaces_lookup | where location=$form.indexchoice$ | table spaceName",
             "earliest_time": "$earliest$",
             "sample_ratio": null,
             "cancelOnUnload": true,
