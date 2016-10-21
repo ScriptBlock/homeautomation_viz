@@ -28,11 +28,13 @@ define([
     //maybe add some CRUD overlay in the future
     var MAP_DETAILS = {
         url: '/en-US/static/@f2c836328108:0/app/homeautomation_viz/images/',
-        basement_image: 'house-basement.png',
-        basement_bounds: [[0,20],[20,40]],
-        first_floor_bounds: [[0,0],[20,20]],
-        first_floor_image: 'house-first-floor.png',
-        total_bounds: [[0,0],[20,40]]
+        //basement_image: 'house-basement.png',
+        //basement_bounds: [[0,20],[20,40]],
+        //first_floor_bounds: [[0,0],[20,20]],
+        //first_floor_image: 'house-first-floor.png',
+        grid_image: 'gridblank.png',
+        grid_bounds: [[0,0],[60,60]],
+        total_bounds: [[0,0],[60,60]]
     }
 
     //attempting data load with deferred objects
@@ -48,6 +50,7 @@ define([
     var hasGoodDom = false;
     var props = {};
     var extendedClass;
+    var mapLocationFilter;
 
     // Extend from SplunkVisualizationBase
     return SplunkVisualizationBase.extend({
@@ -96,6 +99,7 @@ define([
             props["lightOffColor"] = this._getEscapedProperty('lightOffColor', config);
             props["motionColor"] = this._getEscapedProperty('motionColor', config);
             props["noMotionColor"] = this._getEscapedProperty('noMotionColor', config);
+            props["mapLocation"] = this._getEscapedProperty('mapLocation', config);
         },
 
         // Optionally implement to format data returned from search. 
@@ -109,34 +113,44 @@ define([
 
         storeSpaces: function(err, response) {
             console.log("storespace is being called.  setting the spaceDataDeferred object to resolved");
-            spaceData = response.data;
-            spaceDataDeferred.resolve(spaceData);
+            if(!_.isUndefined(mapLocationFilter)) {
+                console.log("there is a mapLocation filter, extracting just those spaces");
+                spaceData = _.filter(response.data, function(item) { return item.mapLocation == mapLocationFilter});
+                spaceDataDeferred.resolve(spaceData);
+            }
         },
 
         storeDevices: function(err, response) {
             console.log("storeDevices is being called.  setting the deviceDataDeferred object to resolved");
-            deviceData = response.data;
-            deviceDataDeferred.resolve(deviceData);
+            if(!_.isUndefined(mapLocationFilter)) {
+                console.log("there is a mapLocation filter, extracting just those devices");
+                deviceData = _.filter(response.data, function(item) { return item.mapLocation == mapLocationFilter});
+                deviceDataDeferred.resolve(deviceData);
+            }
         },
 
 
         drawSpacesCRUD: function(err, response) {
             var spaceDataCRUD = response.data;
+            //console.log(spaceDataCRUD);
             //spaceData = spaceDataCRUD;
             var spaceFeatureGroup = L.featureGroup();
             _.each(spaceDataCRUD, function(space) {
-                var spaceopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#8ff442"};
-                var coords = eval(space["coordinates"]);
-                var coordSize = _.size(coords);
-                var spaceObj;
-                if(coordSize == 2) {
-                    spaceObj = L.rectangle(coords, spaceopts).addTo(spaceFeatureGroup);
-                } else {
-                    spaceObj = L.polygon(coords, spaceopts).addTo(spaceFeatureGroup);
-                }             
-                spaceObj.bringToFront();
+                if(space["mapLocation"] == mapLocationFilter) {
+                    console.log(space);
+                    var spaceopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#8ff442"};
+                    var coords = eval(space["coordinates"]);
+                    var coordSize = _.size(coords);
+                    var spaceObj;
+                    if(coordSize == 2) {
+                        spaceObj = L.rectangle(coords, spaceopts).addTo(spaceFeatureGroup);
+                    } else {
+                        spaceObj = L.polygon(coords, spaceopts).addTo(spaceFeatureGroup);
+                    }             
+                    spaceObj.bringToFront();
 
-                spaceObj.addTo(spaceFeatureGroup);
+                    spaceObj.addTo(spaceFeatureGroup);
+                }
             });
             layerGroup.addLayer(spaceFeatureGroup);
             map.invalidateSize();
@@ -339,9 +353,12 @@ define([
                 map = L.map(this.el, {crs: L.CRS.Simple, scrollWheelZoom: true});
 
                 //TODO these can be deprecated in lieu of a big square grid maybe.
-                L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.first_floor_image, MAP_DETAILS.first_floor_bounds).addTo(map);
-                L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.basement_image, MAP_DETAILS.basement_bounds).addTo(map);
+                //L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.first_floor_image, MAP_DETAILS.first_floor_bounds).addTo(map);
+                //L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.basement_image, MAP_DETAILS.basement_bounds).addTo(map);
                
+
+                L.imageOverlay(MAP_DETAILS.url+MAP_DETAILS.grid_image, MAP_DETAILS.grid_bounds).addTo(map);
+
                 //Changing to fitWorld
                 map.fitBounds(MAP_DETAILS.total_bounds);
                 //map.fitWorld();
@@ -355,6 +372,8 @@ define([
             }
 
             console.log("homeautomation_viz updateView running. ");
+
+
             
             if(_.size(dataRows) > 0) {
                 //we have some data to work with.  do this to avoid multiple lookups for no reason.
@@ -362,7 +381,13 @@ define([
                 layerGroup.clearLayers();
 
                 if(_.size(dataRows) == 1 && dataRows[0]["mode"] != null) {
-                    var crudMode = dataRows[0]["mode"]
+                    console.log(dataRows);
+                    var crudMode = dataRows[0]["mode"];
+                    var mapLocation = dataRows[0]["mapLocation"]
+                    console.log("crudMode = " + crudMode);
+                    console.log("mapLocation = " + mapLocation);
+                    mapLocationFilter = mapLocation;
+
                     if(crudMode == "deviceCRUD") {
                         console.log("found CRUD mode = " + crudMode);
                         service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
@@ -373,6 +398,22 @@ define([
                         service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
                     }
                 } else {
+                    if(props["mapLocation"] != mapLocationFilter) {
+                        console.log("user changed the mapLocation property");
+                        mapLocationFilter = props["mapLocation"];
+                        console.log("to: " + mapLocationFilter);
+                        console.log("re-deferring variables");
+                        var spaceDataDeferred = $.Deferred();
+                        var deviceDataDeferred = $.Deferred();
+                        console.log("re-storing spaces and devices");
+                        service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/spaces/",null,extendedClass.storeSpaces);
+                        service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/devices/",null,extendedClass.storeDevices);
+                    }
+
+                    $.when(spaceDataDeferred, deviceDataDeferred).done(function draw() {
+                        console.log("Deferred when method has been called - presumably because spacedata and devicedata are populated");
+
+
                     var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
                     _.each(infoDevices, function(data) {
                         var deviceName = data["deviceName"]; //smartThings field
@@ -402,8 +443,10 @@ define([
                             }
                         }, this);
                     }, this);
-                    $.when(spaceDataDeferred, deviceDataDeferred).done(function draw() {
-                        console.log("Deferred when method has been called - presumably because spacedata and devicedata are populated");
+
+
+
+
                         extendedClass.drawSpacesProd();
                         extendedClass.drawDevicesProd();
                     });

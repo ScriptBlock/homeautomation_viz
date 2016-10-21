@@ -27,13 +27,13 @@ styles in <div> tags, similar to Bootstrap's grid system.
 <!-- HERES THE CHANGES -->
 <div class="dashboard-body container-fluid main-section-body" data-role"main">
 	<h3>Space Definition</h3>
-
+    <div class="input input-text" id="indexchoice"><label>Index selection</label></div>
+    <button id="indexselect">Select</button>
 	<form id="formSpaceConfiguration">
 		<div class="fieldset">
-            <div class="input input-text" id="indexchoice"><label>Index selection</label></div>
-            <hr/>
 			<div class="input input-text" id="input1"><label>Space Name</label></div>
 			<div class="input input-text" id="input2"><label>Coordinates (Border Definition)</label></div>
+			<div class="input input-text" id="mapLocation"><label>mapLocation (mapname)</label></div>
 			<div class="input input-text" id="input3"><label>KeyID</label></div>
 			<div class="form-submit" id="search_btn"><button class="btn btn-primary submit">Submit</button></div>
 			<div><button id="deleteRecord">Delete Record</button></div>
@@ -225,7 +225,7 @@ require([
             "latest_time": "$latest$",
             "earliest_time": "0",
             "sample_ratio": null,
-            "search": " | inputlookup spaces_lookup | where location=$form.indexchoice$ | eval KeyID = _key | table spaceName, coordinates, location, KeyID",
+            "search": " | inputlookup spaces_lookup | search mapLocation=$indexchoice$ | eval KeyID = _key | table spaceName, coordinates, mapLocation, KeyID",
             "status_buckets": 0,
             "cancelOnUnload": true,
             "app": utils.getCurrentApp(),
@@ -239,7 +239,7 @@ require([
             "latest_time": "$latest$",
             "earliest_time": "0",
             "sample_ratio": null,
-            "search": ' | makeresults | eval mode="spaceCRUD" | eval location=$form.indexchoice$', //makeresults just outputs a single row.  dummy data
+            "search": ' | makeresults | eval mode="spaceCRUD" | eval mapLocation="$indexchoice$"', //makeresults just outputs a single row.  dummy data
             "status_buckets": 0,
             "cancelOnUnload": true,
             "app": utils.getCurrentApp(),
@@ -313,6 +313,11 @@ require([
           FormUtils.handleValueChange(input3);
           setToken("KeyID", e.data["row.KeyID"]);
 
+          $('#formSpaceConfiguration input[id^="mapLocation"]').val(e.data["row.mapLocation"]);
+          FormUtils.handleValueChange(mapLocation);
+          setToken("mapLocation", e.data["row.mapLocation"]);
+
+
         });
 
         var element2 = new VisualizationElement({
@@ -360,6 +365,41 @@ require([
             FormUtils.handleValueChange(input3);
         });
 
+        var mapLocation = new TextInput({
+        	"id": "mapLocation",
+        	"value": "$form.mapLocation$",
+        	"el": $('#mapLocation')
+        }, {tokens: true}).render();
+
+        mapLocation.on("change", function(newVaue) {
+        	FormUtils.handleValueChange(mapLocation);
+        });
+
+
+        var indexChoice = new TextInput({
+            "id": "indexchoice",
+            "value": "$indexchoice$",
+            "el": $('#indexchoice')
+        }, {tokens:true}).render();
+
+        indexChoice.on("change", function(newValue) {
+            FormUtils.handleValueChange(indexChoice);
+            setToken("indexchoice", newValue);
+            search1.startSearch();
+            search2.startSearch();
+        })
+
+
+
+        $("indexselect").click(function() {
+        	var tokens = mvc.Components.get("default");
+        	tokens.set("indexchoice") = $("indexchoice").val
+        	console.log("indexchoice = " + tokens.get("indexchoice"));
+        	search1.startSearch();
+        	search2.startSearch();
+
+        })
+
     	//
     	// CREATE SERVICE OBJECT
     	//
@@ -371,6 +411,7 @@ require([
         $("#deleteRecord").click(function() {
             var tokens = mvc.Components.get("default");
             var form_keyid = tokens.get("KeyID");
+            console.log("deleting keyid " + form_keyid);
 
             service.del("storage/collections/data/spaces/" + encodeURIComponent(form_keyid))
                  .done(function() {
@@ -383,18 +424,6 @@ require([
         });
 
 
-        var inputChoice = new TextInput({
-            "id": "indexchoice",
-            "value": "$form.indexchoice$",
-            "el": $('#indexchoice')
-        }, {tokens:true}).render();
-
-        inputChoice.on("change", function(newValue) {
-            FormUtils.handleValueChange(inputChoice);
-            setToken("indexchoice", newValue);
-            search1.startSearch();
-            search2.startSearch();
-        })
 
         // 
         // SUBMIT FORM DATA
@@ -412,10 +441,12 @@ require([
             var spaceName = tokens.get("spaceName");
             var coordinates = tokens.get("coordinates");
             var KeyID = tokens.get("KeyID");
+            var mapLocation = tokens.get("mapLocation");
 
             var record = {
                 "spaceName": spaceName,
-                "coordinates": coordinates
+                "coordinates": coordinates,
+                "mapLocation": mapLocation
             }
             
             var uri = "storage/collections/data/spaces/";

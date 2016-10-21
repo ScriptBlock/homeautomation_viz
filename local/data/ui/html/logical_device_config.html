@@ -24,17 +24,15 @@ styles in <div> tags, similar to Bootstrap's grid system.
 <a id="navSkip"></a>
 <div class="dashboard-body container-fluid main-section-body" data-role="main">
     <h3>Device Definition</h3>
-
+    <div class="input input-text" id="indexchoice"><label>Index selection</label></div>
+    <button id="indexselect">Select</button>
+    <hr/>
     <form id="formDeviceConfiguration">
-        <div class="fieldset">
-	    <div class="input input-dropdown" id="indexchoice"><label>Index selection</label></div>
-	    <hr>
             <div class="input input-dropdown" id="input1"><label>Device Name</label></div>
             <div class="input input-dropdown" id="input2"><label>Space Assignment</label></div>
-            <br/>
             <div class="input input-dropdown" id="input6"><label>Device Type</label></div>
             <div class="input input-text" id="input4"><label>Coordinates</label></div>
-            <br/>
+            <div class="input input-text" id="mapLocation"><label>mapLocation (mapname)</label></div>
             <div class="input input-text" id="input5"><label>KeyID</label></div>
             <div class="form-submit" id="search_btn"><button class="btn btn-primary submit">Submit</button></div>
             <div><button id="deleteRecord">Delete Record</button></div>
@@ -222,7 +220,7 @@ require([
         var search1 = new SearchManager({
             "id": "search1",
             "latest_time": "$latest$",
-            "search": "| inputlookup devices_lookup | where location=$form.indexchoice$ | eval KeyID = _key | table deviceName, spaceAssignment, coordinates, deviceType, location, KeyID",
+            "search": "| inputlookup devices_lookup | search mapLocation=$indexchoice$ | eval KeyID = _key | table deviceName, spaceAssignment, coordinates, deviceType, mapLocation, KeyID",
             "earliest_time": "0",
             "sample_ratio": null,
             "cancelOnUnload": true,
@@ -236,7 +234,7 @@ require([
         var search2 = new SearchManager({
             "id": "search2",
             "latest_time": "$latest$",
-            "search": '| makeresults | eval mode="deviceCRUD" | eval location=$form.indexchoice$',
+            "search": '| makeresults | eval mode="deviceCRUD" | eval mapLocation="$indexchoice$"',
             "earliest_time": "0",
             "sample_ratio": null,
             "cancelOnUnload": true,
@@ -252,7 +250,7 @@ require([
             "latest_time": "now",
             //TODO remove elements that have been added to the KV store
             //"search": "index=homeautomation deviceName=* | dedup deviceName | table deviceName", 
-            "search": "index=$form.indexchoice$ deviceName=* | dedup deviceName | table deviceName",
+            "search": "index=$indexchoice$ deviceName=* | dedup deviceName | table deviceName",
             "earliest_time": "-7d@d",
             "sample_ratio": null,
             "cancelOnUnload": true,
@@ -266,7 +264,7 @@ require([
         var search4 = new SearchManager({
             "id": "search4",
             "latest_time": "$latest$",
-            "search": "| inputlookup spaces_lookup | where location=$form.indexchoice$ | table spaceName",
+            "search": "| inputlookup spaces_lookup | search mapLocation=$indexchoice$ | table spaceName",
             "earliest_time": "$earliest$",
             "sample_ratio": null,
             "cancelOnUnload": true,
@@ -353,6 +351,9 @@ require([
             //FormUtils.handleValueChange(input6);
             setToken("deviceType", e.data["row.deviceType"]);
             input6.val(e.data["row.deviceType"]);
+
+            setToken("mapLocation", e.data["row.mapLocation"]);
+            mapLocation.val(e.data["row.mapLocation"]);
         });
 
         var element2 = new VisualizationElement({
@@ -421,7 +422,18 @@ require([
         input5.on("change", function(newValue) {
             FormUtils.handleValueChange(input5);
         });
-        
+
+        var mapLocation = new TextInput({
+            "id": "mapLocation",
+            "value": "$mapLocation$",
+            "el": $('#mapLocation')
+        }, {tokens: true}).render();
+
+        mapLocation.on("change", function(newVaue) {
+            FormUtils.handleValueChange(mapLocation);
+        });
+
+
         var input6 = new DropdownInput({
             "id": "input6",
             "choices": [
@@ -440,15 +452,19 @@ require([
             FormUtils.handleValueChange(input6);
         });
 
-	var indexChoice = new TextInput({
-		"id": "indexchoice",
-		"value": "$form.indexchoice$",
-		"el": $('#indexchoice')
-	}, {tokens:true}).render();
-	indexChoice.on("change", function(newVakue) {
-		FormUtils.handleValueChange(indexChoice);
-		search3.startSearch();
-	});
+	   var indexChoice = new TextInput({
+		  "id": "indexchoice",
+		  "value": "$indexchoice$",
+		  "el": $('#indexchoice')
+	   }, {tokens:true}).render();
+	
+        indexChoice.on("change", function(newValue) {
+		  FormUtils.handleValueChange(indexChoice);
+            search1.startSearch();
+            search2.startSearch();
+		    search3.startSearch();
+            search4.startSearch();
+	   });
 		
 
         //
@@ -491,13 +507,15 @@ require([
             var spaceAssignment = tokens.get("spaceAssignment");
             var coordinates = tokens.get("coordinates");
             var deviceType = tokens.get("deviceType");
+            var mapLocation = tokens.get("mapLocation");
             var KeyID = tokens.get("KeyID");
 
             var record = {
                 "deviceName": deviceName,
                 "spaceAssignment": spaceAssignment,
                 "coordinates": coordinates,
-                "deviceType": deviceType
+                "deviceType": deviceType,
+                "mapLocation": mapLocation
             }
             var uri = "storage/collections/data/devices/";
             if(typeof KeyID != "undefined") {

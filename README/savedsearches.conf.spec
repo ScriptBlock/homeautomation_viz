@@ -13,7 +13,7 @@ display.visualizations.custom.homeautomation_viz.homeautomation_viz.doorClosedCo
 display.visualizations.custom.homeautomation_viz.homeautomation_viz.showLights = <boolean>
 display.visualizations.custom.homeautomation_viz.homeautomation_viz.lightOnColor = <string>
 display.visualizations.custom.homeautomation_viz.homeautomation_viz.lightOffColor = <string>
-
 display.visualizations.custom.homeautomation_viz.homeautomation_viz.showMotion = <boolean>
 display.visualizations.custom.homeautomation_viz.homeautomation_viz.motionColor = <string>
 display.visualizations.custom.homeautomation_viz.homeautomation_viz.noMotionColor = <string>
+display.visualizations.custom.homeautomation_viz.homeautomation_viz.mapLocation = <string>
