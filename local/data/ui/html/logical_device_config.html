@@ -24,10 +24,11 @@ styles in <div> tags, similar to Bootstrap's grid system.
 <a id="navSkip"></a>
 <div class="dashboard-body container-fluid main-section-body" data-role="main">
     <h3>Device Definition</h3>
-    <div class="input input-text" id="indexchoice"><label>Index selection</label></div>
-    <button id="indexselect">Select</button>
-    <hr/>
-    <form id="formDeviceConfiguration">
+    <div class="fieldset">
+        <div class="input input-text" id="indexchoice"><label>Index selection</label></div>
+        <button id="indexselect">Select</button>
+        <hr/>
+        <form id="formDeviceConfiguration">
             <div class="input input-dropdown" id="input1"><label>Device Name</label></div>
             <div class="input input-dropdown" id="input2"><label>Space Assignment</label></div>
             <div class="input input-dropdown" id="input6"><label>Device Type</label></div>
@@ -36,9 +37,8 @@ styles in <div> tags, similar to Bootstrap's grid system.
             <div class="input input-text" id="input5"><label>KeyID</label></div>
             <div class="form-submit" id="search_btn"><button class="btn btn-primary submit">Submit</button></div>
             <div><button id="deleteRecord">Delete Record</button></div>
-        </div>
-    </form>
-
+        </form>
+    </div>
 
     <div id="row1" class="dashboard-row dashboard-row1">
         <div id="panel1" class="dashboard-cell" style="width: 100%;">
@@ -425,7 +425,7 @@ require([
 
         var mapLocation = new TextInput({
             "id": "mapLocation",
-            "value": "$mapLocation$",
+            "value": "$form.mapLocation$",
             "el": $('#mapLocation')
         }, {tokens: true}).render();
 

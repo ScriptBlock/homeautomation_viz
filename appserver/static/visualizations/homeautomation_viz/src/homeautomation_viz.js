@@ -34,7 +34,7 @@ define([
         //first_floor_image: 'house-first-floor.png',
         grid_image: 'gridblank.png',
         grid_bounds: [[0,0],[60,60]],
-        total_bounds: [[0,0],[60,60]]
+        total_bounds: [[0,0],[20,20]]
     }
 
     //attempting data load with deferred objects
@@ -62,14 +62,14 @@ define([
             $(this.el).addClass("leaflet_map");
             hasGoodDom = false;
             extendedClass = this;
-            console.log("homeautomation_viz initialize running");
-            console.log("building space and device data in initialize");
+            //console.log("homeautomation_viz initialize running");
+            //console.log("building space and device data in initialize");
 
             //these are built during init assuming that they already exist and are static when in use by the general viz.
             //the data update method will look for the CRUD marker.  if the CRUD marker is found, these variables
             //will be rebuilt during every data refresh instead of being static like is done here.
-            service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/spaces/",null,this.storeSpaces);
-            service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/devices/",null,this.storeDevices);
+            //service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/spaces/",null,this.storeSpaces);
+            //service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/devices/",null,this.storeDevices);
 
 
         },
@@ -81,7 +81,7 @@ define([
 
 
         _getConfigParams: function(config) {
-            console.log("updating config parameters");
+            //console.log("updating config parameters");
             props["showTemps"] = eval(this._getEscapedProperty('showTemps', config));
             props["showDoors"] = eval(this._getEscapedProperty('showDoors', config));
             props["showLights"] = eval(this._getEscapedProperty('showLights', config));
@@ -112,18 +112,18 @@ define([
         },
 
         storeSpaces: function(err, response) {
-            console.log("storespace is being called.  setting the spaceDataDeferred object to resolved");
+            //console.log("storespace is being called.  setting the spaceDataDeferred object to resolved");
             if(!_.isUndefined(mapLocationFilter)) {
-                console.log("there is a mapLocation filter, extracting just those spaces");
+                //console.log("there is a mapLocation filter, extracting just those spaces");
                 spaceData = _.filter(response.data, function(item) { return item.mapLocation == mapLocationFilter});
                 spaceDataDeferred.resolve(spaceData);
             }
         },
 
         storeDevices: function(err, response) {
-            console.log("storeDevices is being called.  setting the deviceDataDeferred object to resolved");
+            //console.log("storeDevices is being called.  setting the deviceDataDeferred object to resolved");
             if(!_.isUndefined(mapLocationFilter)) {
-                console.log("there is a mapLocation filter, extracting just those devices");
+                //console.log("there is a mapLocation filter, extracting just those devices");
                 deviceData = _.filter(response.data, function(item) { return item.mapLocation == mapLocationFilter});
                 deviceDataDeferred.resolve(deviceData);
             }
@@ -132,12 +132,12 @@ define([
 
         drawSpacesCRUD: function(err, response) {
             var spaceDataCRUD = response.data;
-            //console.log(spaceDataCRUD);
+            ////console.log(spaceDataCRUD);
             //spaceData = spaceDataCRUD;
             var spaceFeatureGroup = L.featureGroup();
             _.each(spaceDataCRUD, function(space) {
                 if(space["mapLocation"] == mapLocationFilter) {
-                    console.log(space);
+                    //console.log(space);
                     var spaceopts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#8ff442"};
                     var coords = eval(space["coordinates"]);
                     var coordSize = _.size(coords);
@@ -205,43 +205,45 @@ define([
             var deviceFeatureGroup = L.featureGroup();
 
             _.each(deviceDataCRUD, function(device) {
+                if(device["mapLocation"] == mapLocationFilter) {
 
-                var deviceName = device["deviceName"];
-                var spaceAssignment = device["spaceAssignment"];
-                var coordinates = eval(device["coordinates"]);
-                var deviceType = device["deviceType"];
+                    var deviceName = device["deviceName"];
+                    var spaceAssignment = device["spaceAssignment"];
+                    var coordinates = eval(device["coordinates"]);
+                    var deviceType = device["deviceType"];
 
-                var deviceOpts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#424ef4"};
-                var deviceObj = undefined;
-                switch(deviceType) {
-                    case "Light":
-                        deviceOpts["fillColor"] = "#ededed";
-                        break;
-                    case "Contact":
-                        deviceOpts["fillColor"] = "#b1bcbc";
-                        break;
-                    case "Motion":
-                        deviceOpts["fillColor"] = "#0d0d0d";
-                        break;
-                    default:
-                        console.log("There was no deviceType");
-                        break;
-                }
+                    var deviceOpts = {weight:1, stroke:true, color:"black", opacity:1, fillOpacity:1, fillColor:"#424ef4"};
+                    var deviceObj = undefined;
+                    switch(deviceType) {
+                        case "Light":
+                            deviceOpts["fillColor"] = "#ededed";
+                            break;
+                        case "Contact":
+                            deviceOpts["fillColor"] = "#b1bcbc";
+                            break;
+                        case "Motion":
+                            deviceOpts["fillColor"] = "#0d0d0d";
+                            break;
+                        default:
+                            //console.log("There was no deviceType");
+                            break;
+                    }
 
-                if(_.size(coordinates) == 1) {
-                    coordinates=coordinates[0];
-                    deviceOpts["radius"] = 0.25;
-                    deviceObj = L.circle(coordinates, deviceOpts);
-                } else if(_.size(coordinates) == 2) {
-                    deviceObj = L.rectangle(coordinates, deviceOpts);
-                } else {
-                    deviceObj = L.polygon(coordinates, deviceOpts);
-                }
-                
-                if(deviceObj != undefined) { 
-                    deviceObj.addTo(deviceFeatureGroup); 
-                } else {
-                    console.log("no device type to add");
+                    if(_.size(coordinates) == 1) {
+                        coordinates=coordinates[0];
+                        deviceOpts["radius"] = 0.25;
+                        deviceObj = L.circle(coordinates, deviceOpts);
+                    } else if(_.size(coordinates) == 2) {
+                        deviceObj = L.rectangle(coordinates, deviceOpts);
+                    } else {
+                        deviceObj = L.polygon(coordinates, deviceOpts);
+                    }
+                    
+                    if(deviceObj != undefined) { 
+                        deviceObj.addTo(deviceFeatureGroup); 
+                    } else {
+                        //console.log("no device type to add");
+                    }
                 }
             });
             layerGroup.addLayer(deviceFeatureGroup);
@@ -274,7 +276,7 @@ define([
                             if(device["contact"] == "closed") { deviceOpts["fillColor"] = props["doorClosedColor"]; }
                             if(device["contact"] == "open") { deviceOpts["fillColor"] = props["doorOpenColor"]; }
                         } else {
-                            //console.log("showDoors is false");
+                            ////console.log("showDoors is false");
                         }
                         break;
 
@@ -295,7 +297,7 @@ define([
                         break;
 
                     default:
-                        console.log("No valid device type found");
+                        //console.log("No valid device type found");
 
                 }
 
@@ -322,7 +324,7 @@ define([
                         deviceObj.bindTooltip(toolTipText, {opacity:1});
                         deviceObj.addTo(deviceFeatureGroup); 
                     } else {
-                        console.log("no device type to add");
+                        //console.log("no device type to add");
                     }
                 }
             });
@@ -349,7 +351,7 @@ define([
             var noRoom = eval("[[0,0],[0,0]]");
 
             if(!hasGoodDom) {
-                console.log("Running new DOM creation");
+                //console.log("Running new DOM creation");
                 map = L.map(this.el, {crs: L.CRS.Simple, scrollWheelZoom: true});
 
                 //TODO these can be deprecated in lieu of a big square grid maybe.
@@ -371,7 +373,7 @@ define([
                 map.setZoom(4);
             }
 
-            console.log("homeautomation_viz updateView running. ");
+            //console.log("homeautomation_viz updateView running. ");
 
 
             
@@ -381,68 +383,68 @@ define([
                 layerGroup.clearLayers();
 
                 if(_.size(dataRows) == 1 && dataRows[0]["mode"] != null) {
-                    console.log(dataRows);
+                    //console.log(dataRows);
                     var crudMode = dataRows[0]["mode"];
                     var mapLocation = dataRows[0]["mapLocation"]
-                    console.log("crudMode = " + crudMode);
-                    console.log("mapLocation = " + mapLocation);
+                    //console.log("crudMode = " + crudMode);
+                    //console.log("mapLocation = " + mapLocation);
                     mapLocationFilter = mapLocation;
 
                     if(crudMode == "deviceCRUD") {
-                        console.log("found CRUD mode = " + crudMode);
+                        //console.log("found CRUD mode = " + crudMode);
                         service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
                         service.get("storage/collections/data/devices/",null,this.drawDevicesCRUD);
                         //draw rooms and devices    
                     } else {
-                        console.log("found CRUD mode = " + crudMode);
+                        //console.log("found CRUD mode = " + crudMode);
                         service.get("storage/collections/data/spaces/",null,this.drawSpacesCRUD);
                     }
                 } else {
                     if(props["mapLocation"] != mapLocationFilter) {
-                        console.log("user changed the mapLocation property");
+                        //console.log("user changed the mapLocation property");
                         mapLocationFilter = props["mapLocation"];
-                        console.log("to: " + mapLocationFilter);
-                        console.log("re-deferring variables");
-                        var spaceDataDeferred = $.Deferred();
-                        var deviceDataDeferred = $.Deferred();
-                        console.log("re-storing spaces and devices");
+                        //console.log("to: " + mapLocationFilter);
+                        //console.log("re-deferring variables");
+                        //var spaceDataDeferred = $.Deferred();
+                        //var deviceDataDeferred = $.Deferred();
+                        //console.log("re-storing spaces and devices");
                         service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/spaces/",null,extendedClass.storeSpaces);
                         service.get("/servicesNS/nobody/homeautomation_viz/storage/collections/data/devices/",null,extendedClass.storeDevices);
                     }
 
                     $.when(spaceDataDeferred, deviceDataDeferred).done(function draw() {
-                        console.log("Deferred when method has been called - presumably because spacedata and devicedata are populated");
+                        //console.log("Deferred when method has been called - presumably because spacedata and devicedata are populated");
 
 
-                    var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
-                    _.each(infoDevices, function(data) {
-                        var deviceName = data["deviceName"]; //smartThings field
-                        var contact = data["contact"]; //smartThings field
-                        var switchState = data["switchstate"]; //smartThings field
-                        var temperature = data["temperature"]; //smartThings field
-                        var switchLevel = data["switchlevel"]; //smartThings field
-                        var motion = data["motion"]; //smartThings field
+                        var infoDevices = _.filter(dataRows, function(origData) { return origData["deviceName"] != null });
+                        _.each(infoDevices, function(data) {
+                            var deviceName = data["deviceName"]; //smartThings field
+                            var contact = data["contact"]; //smartThings field
+                            var switchState = data["switchstate"]; //smartThings field
+                            var temperature = data["temperature"]; //smartThings field
+                            var switchLevel = data["switchlevel"]; //smartThings field
+                            var motion = data["motion"]; //smartThings field
 
-                        _.each(deviceData, function(j) {
-                            if(j["deviceName"] == deviceName) {
-                                j["contact"] = contact;
-                                j["switchState"] = switchState;
-                                j["temperature"] = temperature;
-                                j["switchLevel"] = switchLevel;
-                                j["motion"] = motion;
+                            _.each(deviceData, function(j) {
+                                if(j["deviceName"] == deviceName) {
+                                    j["contact"] = contact;
+                                    j["switchState"] = switchState;
+                                    j["temperature"] = temperature;
+                                    j["switchLevel"] = switchLevel;
+                                    j["motion"] = motion;
 
-                                _.each(spaceData, function(i) {  
-                                    if(i["spaceName"] == j["spaceAssignment"]) { 
-                                        if(temperature != undefined) {
-                                            i["temperature"] = temperature; 
-                                        } else {
-                                            i["temperature"] = "undefined";
-                                        }
-                                    }  
-                                }, this);
-                            }
+                                    _.each(spaceData, function(i) {  
+                                        if(i["spaceName"] == j["spaceAssignment"]) { 
+                                            if(temperature != undefined) {
+                                                i["temperature"] = temperature; 
+                                            } else {
+                                                i["temperature"] = "undefined";
+                                            }
+                                        }  
+                                    }, this);
+                                }
+                            }, this);
                         }, this);
-                    }, this);
 
 
 

@@ -27,21 +27,20 @@ styles in <div> tags, similar to Bootstrap's grid system.
 <!-- HERES THE CHANGES -->
 <div class="dashboard-body container-fluid main-section-body" data-role"main">
 	<h3>Space Definition</h3>
-    <div class="input input-text" id="indexchoice"><label>Index selection</label></div>
-    <button id="indexselect">Select</button>
-	<form id="formSpaceConfiguration">
-		<div class="fieldset">
+	<div class="fieldset">
+		<div class="input input-text" id="indexchoice"><label>Index selection</label></div>
+		<button id="indexselect">Select</button>
+		<hr/>
+		<form id="formSpaceConfiguration">
 			<div class="input input-text" id="input1"><label>Space Name</label></div>
 			<div class="input input-text" id="input2"><label>Coordinates (Border Definition)</label></div>
 			<div class="input input-text" id="mapLocation"><label>mapLocation (mapname)</label></div>
 			<div class="input input-text" id="input3"><label>KeyID</label></div>
 			<div class="form-submit" id="search_btn"><button class="btn btn-primary submit">Submit</button></div>
 			<div><button id="deleteRecord">Delete Record</button></div>
-		<div>
-	</form>
-
-
-
+		</form>
+	<div>
+	
     <div id="row1" class="dashboard-row dashboard-row1">
 		<div id="panel1" class="dashboard-cell" style="width: 100%;">
 			<div class="dashboard-panel">
@@ -394,7 +393,7 @@ require([
         $("indexselect").click(function() {
         	var tokens = mvc.Components.get("default");
         	tokens.set("indexchoice") = $("indexchoice").val
-        	console.log("indexchoice = " + tokens.get("indexchoice"));
+        	//console.log("indexchoice = " + tokens.get("indexchoice"));
         	search1.startSearch();
         	search2.startSearch();
 
@@ -411,7 +410,7 @@ require([
         $("#deleteRecord").click(function() {
             var tokens = mvc.Components.get("default");
             var form_keyid = tokens.get("KeyID");
-            console.log("deleting keyid " + form_keyid);
+            //console.log("deleting keyid " + form_keyid);
 
             service.del("storage/collections/data/spaces/" + encodeURIComponent(form_keyid))
                  .done(function() {
@@ -451,7 +450,7 @@ require([
             
             var uri = "storage/collections/data/spaces/";
             if(typeof KeyID != "undefined") {
-               console.log("this appears to be a record update");
+               //console.log("this appears to be a record update");
                uri += KeyID + "/";
             } 
             
